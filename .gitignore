@@ -8,7 +8,7 @@ wereshift.dll
 wereshift.a
 wereshift.lib
 wereshift-test-*
-wereshift
+/wereshift
 *.exe
 *.o
 *.obj
