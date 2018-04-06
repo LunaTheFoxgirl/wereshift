@@ -21,12 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.app;
-import polyplex.core;
-import polyplex;
-import wereshift.game;
+module wereshift.iovr;
 
-static void main(string[] args) {
-	BasicGameLauncher.InitSDL();
-	BasicGameLauncher.LaunchGame(new WereshiftGame(), args);
-}
+/*
+	MODULE OVERRIDES, modules will be overwritten in libpp as being in default namespace of wereshift.iovr until i fix them.
+*/
+
+// TODO: put polyplex.core.content.contentmanager into default namespace.
+public import polyplex.core.content.contentmanager;
