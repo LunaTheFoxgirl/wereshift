@@ -1,0 +1,13 @@
+{
+	"name": "wereshift",
+	"authors": [
+		"Clipsey",
+		"Shramper"
+	],
+	"dependencies": {
+		"pp": "~master"
+	},
+	"description": "Submission for Linux Game Jam 2018",
+	"copyright": "Copyright © 2018, Clipsey, Shramper",
+	"license": "MIT"
+}

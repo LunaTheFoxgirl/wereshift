@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+wereshift.so
+wereshift.dylib
+wereshift.dll
+wereshift.a
+wereshift.lib
+wereshift-test-*
+wereshift
+*.exe
+*.o
+*.obj
+*.lst
+
+libs/
