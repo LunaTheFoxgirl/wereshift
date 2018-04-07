@@ -21,34 +21,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.gameobjects.ground;
+module wereshift.gameobjects.house;
 import wereshift.gameobject;
 import wereshift.animation;
 import wereshift.game;
+import wereshift.random;
 
-public class Ground : GameObject {
-	public static Texture2D GroundTexture;
+public class House : GameObject {
+	// Looks
+	public static Texture2D HouseTexture;
+	private static Random rng = null;
+	private static float last_house_pos = 0;
 
-	this(Level parent) {
-		super(parent, Vector2(0, 0));
+	// Collission
+	public Rectangle Hitbox;
+
+	this(Level parent, Vector2 spawn_point) {
+		super(parent, spawn_point);
+		if (rng is null) rng = new Random();
 	}
 
 	public override void LoadContent(ContentManager content) {
-		if (GroundTexture is null) GroundTexture = content.LoadTexture("terrain/ground");	
+		if (HouseTexture is null) HouseTexture = content.LoadTexture("terrain/house_1");
+		float offset = rng.Next(16, 32);
+		if (last_house_pos == 0) last_house_pos = (((parent.LevelSizePX/2)-(HouseTexture.Width*((this.spawn_point.Y/2))))+(this.spawn_point.X*HouseTexture.Width));
+		this.spawn_point = Vector2(last_house_pos+(offset*10), 0);
+		last_house_pos = (HouseTexture.Width)+last_house_pos+(offset*10);
+
+		this.Hitbox = new Rectangle(cast(int)this.spawn_point.X+110, cast(int)this.spawn_point.Y, 779, HouseTexture.Height);
 	}
 
 	public override void Update(GameTimes game_time) {
-
+		if (parent.ThePlayer.Hitbox.Intersects(this.Hitbox)) {
+			parent.ThePlayer.Shade();
+		}
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		foreach (i; 0 .. parent.LevelSize) {
-			SpriteFlip flip = SpriteFlip.None;
-			if (i % 2 == 0) flip = SpriteFlip.FlipVertical;
-			sprite_batch.Draw(GroundTexture, 
-				new Rectangle(i*GroundTexture.Width, -32, GroundTexture.Width, GroundTexture.Height), 
-				new Rectangle(0, 0, GroundTexture.Width, GroundTexture.Height), 
-				Color.White, flip);
-		}
+		sprite_batch.Draw(HouseTexture, 
+			new Rectangle(cast(int)spawn_point.X, -HouseTexture.Height, HouseTexture.Width, HouseTexture.Height), 
+			new Rectangle(0, 0, HouseTexture.Width, HouseTexture.Height), 
+			Color.White);
 	}
 }

@@ -68,6 +68,8 @@ public class Villager : GameObject {
 
 		this.Position = spawn_point;
 		Gender = VillagerGender.Female;
+
+		// it seemed to prefer female wayyyyyyy over male, this seems to balance it out pretty well.
 		if (rng.Next(0, 10) > 3) {
 			Gender = VillagerGender.Male;
 		}

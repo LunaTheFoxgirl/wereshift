@@ -51,15 +51,17 @@ public class Player : GameObject {
 	private float sneak_slowdown = 2f;
 	public Vector2 Position = Vector2(0f, 0f);
 
+	// Collission
+	public Rectangle Hitbox;
+
 	// Forms
 	public Form CurrentForm = Form.Wolf;
-
 
 	// Stealth
 	public HideState HiddenState = HideState.Hidden;
 	public LightState LightingState = LightState.InShade;
-
-	private int watchers;
+	private int watchers = 0;
+	private int shaders = 0;
 
 	public void SeePlayer() {
 		watchers++;
@@ -69,11 +71,30 @@ public class Player : GameObject {
 		watchers--;
 	}
 
+	public void Shade() {
+		shaders++;
+	}
+
+	//Health
+	private float health = 100f;
+	private float defense = 10f;
+
+	public float Health() {
+		return health;
+	}
+
+	public void Damage(int amount) {
+		health -= amount/defense;
+	}
+
+	// Constructor
 
 	this(Level parent) {
 		super(parent, Vector2(0, 0));
 		this.Position = spawn_point;
 	}
+
+	// Overrides
 
 	public override void LoadContent(ContentManager content) {
 		player_tex = content.LoadTexture("entities/player");
@@ -142,9 +163,14 @@ public class Player : GameObject {
 	private MouseState last_state_m;
 	private KeyboardState last_state_k;
 	public override void Update(GameTimes game_time) {
-
 		KeyboardState state_k = Keyboard.GetState();
 		MouseState state_m = Mouse.GetState();
+
+		this.LightingState = LightingState.Moonlit;
+		if (shaders > 0) {
+			this.LightingState = LightState.InShade;
+		}
+		this.shaders = 0;
 
 		float final_speed = speed;
 		if (HiddenState == HideState.Hidden) final_speed -= sneak_slowdown;
@@ -160,7 +186,7 @@ public class Player : GameObject {
 			if (this.CurrentForm == Form.Human) {
 				player_anim.ChangeAnimation("human_walk");
 			} else if (this.CurrentForm == Form.Wolf) {
-				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_walk");
+				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
 				else player_anim.ChangeAnimation("wolf_light_walk");
 			} else {
 				player_anim.ChangeAnimation("werewolf_walk");
@@ -175,7 +201,7 @@ public class Player : GameObject {
 			if (this.CurrentForm == Form.Human) {
 				player_anim.ChangeAnimation("human_walk");
 			} else if (this.CurrentForm == Form.Wolf) {
-				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_walk");
+				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
 				else player_anim.ChangeAnimation("wolf_light_walk");
 			} else {
 				player_anim.ChangeAnimation("werewolf_walk");
@@ -189,7 +215,7 @@ public class Player : GameObject {
 			if (this.CurrentForm == Form.Human) {
 				player_anim.ChangeAnimation("human_idle", s);
 			} else if (this.CurrentForm == Form.Wolf) {
-				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_idle", s);
+				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_idle", s);
 				else player_anim.ChangeAnimation("wolf_light_idle", s);
 			} else {
 				player_anim.ChangeAnimation("werewolf_idle", s);
@@ -207,6 +233,8 @@ public class Player : GameObject {
 		handle_camera();
 
 		handle_animation();
+
+		Hitbox = new Rectangle(cast(int)Position.X+80, cast(int)Position.Y, 64, player_tex.Height/8);
 
 		// update states.
 		last_state_k = state_k;

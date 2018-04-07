@@ -88,7 +88,7 @@ public class Level {
 		text_handler = new Text(manager, "fonts/test_font");
 		Camera = new Camera2D(Vector2(0, 0));
 		Camera.Zoom = 0.8f;
-		LevelSize = 50;
+		LevelSize = 70;
 	}
 
 	public void Init() {
@@ -98,6 +98,11 @@ public class Level {
 		Random r = new Random();
 		foreach(i; 0 .. r.Next(5, 15)) {
 			Entities ~= new Villager(this, Vector2(r.Next(512, (LevelSizePX-512)), 0));
+		}
+		
+		int house_amount = r.Next(5, 8);
+		foreach(i; 0 .. house_amount) {
+			Scenery ~= new House(this, Vector2(i, house_amount));
 		}
 
 		foreach(GameObject e; Entities) {
