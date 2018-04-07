@@ -66,7 +66,7 @@ public class WereshiftGame : Game {
 		Drawing.ClearColor(Color.Black);
 		current_level.Draw(game_time, sprite_batch);
 		sprite_batch.Begin();
-		f.DrawString(Frametime.text ~ " MS frametime\nThis is a test", Vector2(32, 32), 2f);
+		f.DrawString(Frametime.text ~ " MS frametime\nPlayer Position " ~ current_level.ThePlayer.Position.ToString, Vector2(32, 32), 2f);
 		sprite_batch.End();
 	}
 }

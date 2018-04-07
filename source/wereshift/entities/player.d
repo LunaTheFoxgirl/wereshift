@@ -48,11 +48,16 @@ public class Player : Entity {
 	private Animation werewolf_anim;
 	private Animation human_anim;
 
+	//private Animation current_anim;
+
 	private SpriteFlip flip = SpriteFlip.None;
 
 
 	public Vector2 Position = Vector2(0f, 0f);
 	public Form CurrentForm = Form.Human;
+
+	public bool InShade = false;
+	public bool Hidden = false;
 
 
 	this(Level parent) {
@@ -96,25 +101,40 @@ public class Player : Entity {
 		human_anim.ChangeAnimation("idle_light");
 	}
 
+	private MouseState last_state_m;
+	private KeyboardState last_state_k;
 	public override void Update(GameTimes game_time) {
 
+		KeyboardState state_k = Keyboard.GetState();
+		MouseState state_m = Mouse.GetState();
+
 		// TODO: improve the input situration here, lol
-		if (Keyboard.GetState().IsKeyDown(Keys.Left)) {
+		if (state_k.IsKeyDown(Keys.Left)) {
 			Position -= Vector2(0.1f, 0f);
-			human_anim.ChangeAnimation("walk_light");
+			if (InShade) human_anim.ChangeAnimation("walk_dark");
+			else human_anim.ChangeAnimation("walk_light");
 			flip = SpriteFlip.FlipVertical;
-		} else if (Keyboard.GetState().IsKeyDown(Keys.Right)) {
+		} else if (state_k.IsKeyDown(Keys.Right)) {
 			Position += Vector2(0.1f, 0f);
-			human_anim.ChangeAnimation("walk_light");
+			if (InShade) human_anim.ChangeAnimation("walk_dark");
+			else human_anim.ChangeAnimation("walk_light");
 			flip = SpriteFlip.None;
 		} else {
-			human_anim.ChangeAnimation("idle_light");
+			if (InShade) human_anim.ChangeAnimation("idle_dark");
+			else human_anim.ChangeAnimation("idle_light");
+		}
+
+		if (state_m.IsButtonPressed(MouseButton.Left) && last_state_m.IsButtonReleased(MouseButton.Left)) {
+			InShade = !InShade;
 		}
 
 		handle_camera();
 
 		handle_animation();
 
+		// update states.
+		last_state_k = state_k;
+		last_state_m = state_m;
 	}
 
 	private void handle_camera() {
