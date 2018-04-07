@@ -46,6 +46,14 @@ public class Animation {
 		this.Animations = animations;
 	}
 
+	public string AnimationName() {
+		return animation_name;
+	}
+
+	public int AnimationFrame() {
+		return frame;
+	}
+
 	public void ChangeAnimation(string name, bool seamless = false) {
 		if (animation_name == name) return;
 		this.animation_name = name;

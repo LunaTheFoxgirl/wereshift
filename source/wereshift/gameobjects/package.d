@@ -24,3 +24,5 @@ SOFTWARE.
 module wereshift.gameobjects;
 
 public import wereshift.gameobjects.player;
+public import wereshift.gameobjects.villager;
+public import wereshift.gameobjects.ground;

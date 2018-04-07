@@ -21,26 +21,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.gameobject;
-public import wereshift.iovr;
-public import wereshift.level;
-public import polyplex.core;
-public import polyplex.math;
+module wereshift.gameobjects.ground;
+import wereshift.gameobject;
+import wereshift.animation;
+import wereshift.game;
 
-public abstract class GameObjectFactory {
-	public abstract GameObject Construct(Level level, Vector2 spawn_point);
-}
+public class Ground : GameObject {
+	public Texture2D GroundTexture;
 
-public class GameObject {
-	protected Level parent;
-	protected Vector2 spawn_point;
-
-	this(Level parent, Vector2 spawn_point) {
-		this.parent = parent;
-		this.spawn_point = spawn_point;
+	this(Level parent) {
+		super(parent, Vector2(0, 0));
 	}
 
-	public abstract void LoadContent(ContentManager content);
-	public abstract void Update(GameTimes game_time);
-	public abstract void Draw(GameTimes game_time, SpriteBatch sprite_batch);
+	public override void LoadContent(ContentManager content) {
+		this.GroundTexture = content.LoadTexture("terrain/ground");	
+	}
+
+	public override void Update(GameTimes game_time) {
+
+	}
+
+	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		foreach (i; 0 .. parent.LevelSize) {
+			SpriteFlip flip = SpriteFlip.None;
+			if (i % 2 == 0) flip = SpriteFlip.FlipVertical;
+			sprite_batch.Draw(GroundTexture, 
+				new Rectangle(i*GroundTexture.Width, -32, GroundTexture.Width, GroundTexture.Height), 
+				new Rectangle(0, 0, GroundTexture.Width, GroundTexture.Height), 
+				Color.White, flip);
+		}
+	}
 }

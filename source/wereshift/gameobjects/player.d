@@ -25,14 +25,7 @@ module wereshift.gameobjects.player;
 import wereshift.gameobject;
 import wereshift.animation;
 import wereshift.game;
-import wereshift.text;
-import std.stdio;
-
-public class PlayerFactory : GameObjectFactory {
-	public override GameObject Construct(Level level) {
-		return new Player(level);
-	}
-}
+import std.string;
 
 public enum Form {
 	Werewolf,
@@ -46,69 +39,104 @@ public enum HideState {
 }
 
 public class Player : GameObject {
-	private Texture2D wolf;
-	private Texture2D werewolf;
-	private Texture2D human;
-
-	private Animation wolf_anim;
-	private Animation werewolf_anim;
-	private Animation human_anim;
-
-	private Text text_drawer;
-
-	//private Animation current_anim;
-
+	// Looks
+	private Texture2D player_tex;
+	private Animation player_anim;
 	private SpriteFlip flip = SpriteFlip.None;
 
-
+	// Movement
+	private float speed = 3f;
+	private float werewolf_boost = 2f;
+	private float wolf_boost = 5f;
+	private float sneak_slowdown = 2f;
 	public Vector2 Position = Vector2(0f, 0f);
-	public Form CurrentForm = Form.Human;
 
-	public bool InShade = false;
-	public bool Hidden = false;
+	// Forms
+	public Form CurrentForm = Form.Wolf;
+
+
+	// Stealth
+	public HideState HiddenState = HideState.Hidden;
+	public LightState LightingState = LightState.InShade;
+
+	private int watchers;
+
+	public void SeePlayer() {
+		watchers++;
+	}
+
+	public void ForgetPlayer() {
+		watchers--;
+	}
 
 
 	this(Level parent) {
-		super(parent);
+		super(parent, Vector2(0, 0));
+		this.Position = spawn_point;
 	}
 
 	public override void LoadContent(ContentManager content) {
-		wolf = content.LoadTexture("entities/player_wolf");
-		human = content.LoadTexture("entities/player_man");
-		werewolf = content.LoadTexture("entities/player_werewolf");
+		player_tex = content.LoadTexture("entities/player");
 
-		text_drawer = new Text(content, "fonts/test_font");
-
-		human_anim = new Animation([
-			"idle_dark": [
+		player_anim = new Animation([
+			"human_idle": [
 				new AnimationData(0, 0, 10),
 				new AnimationData(1, 0, 10),
 				new AnimationData(2, 0, 10),
 				new AnimationData(3, 0, 10)
 			],
-			"idle_light": [
-				new AnimationData(0, 2, 20),
-				new AnimationData(1, 2, 20),
-				new AnimationData(2, 2, 20),
-				new AnimationData(3, 2, 20)
-
-			],
-			"walk_dark": [
+			"human_walk": [
 				new AnimationData(0, 1, 10),
 				new AnimationData(1, 1, 10),
 				new AnimationData(2, 1, 10),
 				new AnimationData(3, 1, 10)
-
 			],
-			"walk_light": [
-				new AnimationData(0, 3, 5),
-				new AnimationData(1, 3, 5),
-				new AnimationData(2, 3, 5),
-				new AnimationData(3, 3, 5)
-
+			"wolf_dark_idle": [
+				new AnimationData(0, 2, 20),
+				new AnimationData(1, 2, 20),
+				new AnimationData(2, 2, 20),
+				new AnimationData(3, 2, 20)
+			],
+			"wolf_dark_walk": [
+				new AnimationData(0, 3, 11),
+				new AnimationData(1, 3, 11),
+				new AnimationData(2, 3, 11),
+				new AnimationData(3, 3, 11)
+			],
+			"wolf_light_idle": [
+				new AnimationData(0, 4, 15),
+				new AnimationData(1, 4, 15),
+				new AnimationData(2, 4, 15),
+				new AnimationData(3, 4, 15)
+			],
+			"wolf_light_walk": [
+				new AnimationData(0, 5, 10),
+				new AnimationData(1, 5, 10),
+				new AnimationData(2, 5, 10),
+				new AnimationData(3, 5, 10)
+			],
+			"werewolf_idle": [
+				new AnimationData(0, 6, 10),
+				new AnimationData(1, 6, 10),
+				new AnimationData(2, 6, 10),
+				new AnimationData(3, 6, 10),
+				new AnimationData(4, 6, 10),
+				new AnimationData(5, 6, 10)
+			],
+			"werewolf_walk": [
+				new AnimationData(0, 7, 5),
+				new AnimationData(1, 7, 5),
+				new AnimationData(2, 7, 5),
+				new AnimationData(3, 7, 5),
+				new AnimationData(4, 7, 5),
+				new AnimationData(5, 7, 5),
+				new AnimationData(6, 7, 5),
+				new AnimationData(7, 7, 5)
 			]
 		]);
-		human_anim.ChangeAnimation("idle_light");
+		player_anim.ChangeAnimation("human_idle");
+
+		Position = Vector2(Position.X, -(player_tex.Height/8));
 	}
 
 	private MouseState last_state_m;
@@ -118,24 +146,62 @@ public class Player : GameObject {
 		KeyboardState state_k = Keyboard.GetState();
 		MouseState state_m = Mouse.GetState();
 
+		float final_speed = speed;
+		if (HiddenState == HideState.Hidden) final_speed -= sneak_slowdown;
+		if (CurrentForm == Form.Werewolf) final_speed += werewolf_boost;
+		if (CurrentForm == Form.Wolf) final_speed += wolf_boost;
+
 		// TODO: improve the input situration here, lol
 		if (state_k.IsKeyDown(Keys.Left)) {
-			Position -= Vector2(0.1f, 0f);
-			if (InShade) human_anim.ChangeAnimation("walk_dark");
-			else human_anim.ChangeAnimation("walk_light");
+
+			Position -= Vector2(final_speed, 0f);
+
+			// Animation
+			if (this.CurrentForm == Form.Human) {
+				player_anim.ChangeAnimation("human_walk");
+			} else if (this.CurrentForm == Form.Wolf) {
+				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_walk");
+				else player_anim.ChangeAnimation("wolf_light_walk");
+			} else {
+				player_anim.ChangeAnimation("werewolf_walk");
+			}
+
 			flip = SpriteFlip.FlipVertical;
 		} else if (state_k.IsKeyDown(Keys.Right)) {
-			Position += Vector2(0.1f, 0f);
-			if (InShade) human_anim.ChangeAnimation("walk_dark");
-			else human_anim.ChangeAnimation("walk_light");
+
+			Position += Vector2(final_speed, 0f);
+
+			// Animation
+			if (this.CurrentForm == Form.Human) {
+				player_anim.ChangeAnimation("human_walk");
+			} else if (this.CurrentForm == Form.Wolf) {
+				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_walk");
+				else player_anim.ChangeAnimation("wolf_light_walk");
+			} else {
+				player_anim.ChangeAnimation("werewolf_walk");
+			}
+
 			flip = SpriteFlip.None;
 		} else {
-			if (InShade) human_anim.ChangeAnimation("idle_dark");
-			else human_anim.ChangeAnimation("idle_light");
+
+			// Animation
+			bool s = (player_anim.AnimationName.endsWith("idle"));
+			if (this.CurrentForm == Form.Human) {
+				player_anim.ChangeAnimation("human_idle", s);
+			} else if (this.CurrentForm == Form.Wolf) {
+				if (HiddenState == HideState.Hidden) player_anim.ChangeAnimation("wolf_dark_idle", s);
+				else player_anim.ChangeAnimation("wolf_light_idle", s);
+			} else {
+				player_anim.ChangeAnimation("werewolf_idle", s);
+			}
 		}
 
-		if (state_m.IsButtonPressed(MouseButton.Left) && last_state_m.IsButtonReleased(MouseButton.Left)) {
-			InShade = !InShade;
+		if (Position.X+((player_tex.Width/8)/4) < 0) {
+			Position = Vector2(-((player_tex.Width/8)/4), Position.Y);
+		}
+
+		if (Position.X+(player_tex.Width/8) > parent.LevelSizePX) {
+			Position = Vector2(parent.LevelSizePX-(player_tex.Width/8), Position.Y);
 		}
 
 		handle_camera();
@@ -148,38 +214,34 @@ public class Player : GameObject {
 	}
 
 	private void handle_camera() {
-		parent.Camera.Origin = (WereshiftGame.Bounds/2)-Vector2((human.Width/4)/2, (human.Height/4)/2);
-		parent.Camera.Position = Vector3(Position.X, Position.Y, 0);
+		parent.Camera.Origin = (WereshiftGame.Bounds/2)-Vector2((player_tex.Width/8)/2, 0);
+		parent.Camera.Position = Vector3(Position.X, Position.Y+((player_tex.Height/8)/2), 0);
+
+		// Cap camera < 0
+		if ((parent.Camera.Position - Vector3(((WereshiftGame.Bounds.X/2)/parent.Camera.Zoom)-((player_tex.Width/8)/2), 0f, 0f)).X <= 0) {
+			parent.Camera.Position = Vector3(
+				(WereshiftGame.Bounds.X/2)/parent.Camera.Zoom-((player_tex.Width/8)/2)-(8/parent.Camera.Zoom), 
+				Position.Y+((player_tex.Height/8)/2), 
+				0f);
+		}
+
+		// Cap camera > level
+		if ((parent.Camera.Position + Vector3(((WereshiftGame.Bounds.X/2)/parent.Camera.Zoom)+((player_tex.Width/8)/2), 0f, 0f)).X >= (parent.LevelSizePX)) {
+			parent.Camera.Position = Vector3(
+				(parent.LevelSizePX - ((player_tex.Width/8)/2) - (32/parent.Camera.Zoom)) -((WereshiftGame.Bounds.X/2)/parent.Camera.Zoom), 
+				Position.Y+((player_tex.Height/8)/2), 
+				0f);
+		}
+
+		if (!this.watchers > 0) parent.ZoomOutCamera();
+		else parent.ZoomInCamera();
 	}
 
 	private void handle_animation() {
-		human_anim.Update();
-		//werewolf_anim.Update();
-		//wolf_anim.Update();
+		player_anim.Update();
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, parent.Camera);
-		if (CurrentForm == Form.Human) {
-			sprite_batch.Draw(human, new Rectangle(cast(int)Position.X, cast(int)Position.Y, human.Width/4, human.Height/4), new Rectangle(human_anim.GetAnimationX()*(human.Width/4), human_anim.GetAnimationY()*(human.Height/4), human.Width/4, human.Height/4), Color.White, flip);
-
-		} else if (CurrentForm == Form.Werewolf) {
-			sprite_batch.Draw(werewolf, new Rectangle(cast(int)Position.X, cast(int)Position.Y, werewolf.Width/4, werewolf.Height/4), new Rectangle(0, (640/4)*3, 320/4, 640/4), Color.White, flip);
-
-		} else {
-			sprite_batch.Draw(wolf, new Rectangle(cast(int)Position.X, cast(int)Position.Y, wolf.Width/4, wolf.Height/4), new Rectangle(0, (640/4)*3, 320/4, 640/4), Color.White, flip);
-
-		}
-		sprite_batch.End();
-		sprite_batch.Begin();
-		Color c = Color.White;
-		Vector2 ex_size = text_drawer.MeasureString("Exposed", 2f);
-		Vector2 hd_size = text_drawer.MeasureString("Hidden", 2f);
-		if (InShade) c = Color.Gray;
-		text_drawer.DrawString(sprite_batch, "Exposed", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X - 16, cast(int)WereshiftGame.Bounds.Y - (cast(int)ex_size.Y*2) - 16), 2f, c);
-		if (InShade) c = Color.White;
-		if (!InShade) c = Color.Gray;
-		text_drawer.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)hd_size.X - 16, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y - 16), 2f, c);
-		sprite_batch.End();
+		sprite_batch.Draw(player_tex, new Rectangle(cast(int)Position.X, cast(int)Position.Y, player_tex.Width/8, player_tex.Height/8), new Rectangle(player_anim.GetAnimationX()*(player_tex.Width/8), player_anim.GetAnimationY()*(player_tex.Height/8), player_tex.Width/8, player_tex.Height/8), Color.White, flip);
 	}
 }

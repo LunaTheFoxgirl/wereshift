@@ -29,6 +29,7 @@ import polyplex.utils.logging;
 import wereshift.level;
 import wereshift.text;
 import std.conv;
+import std.stdio;
 
 public class WereshiftGame : Game {
 
@@ -62,8 +63,9 @@ public class WereshiftGame : Game {
 		current_level.Update(game_time);
 	}
 
+	Color bg = new Color(10, 10, 25);
 	public override void Draw(GameTimes game_time) {
-		Drawing.ClearColor(Color.Black);
+		Drawing.ClearColor(bg);
 		current_level.Draw(game_time, sprite_batch);
 		sprite_batch.Begin();
 		f.DrawString(Frametime.text ~ " MS frametime", Vector2(32, 32), 1f, Color.Red);
