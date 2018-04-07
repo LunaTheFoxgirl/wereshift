@@ -7,5 +7,8 @@ Controls:
 TODO
 
 # Credits
-Programming : Clipsey
-Art : Sean "Shramper" Browning
+## Programming
+ * Clipsey
+
+## Art
+ * Sean "Shramper" Browning
