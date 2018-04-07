@@ -46,10 +46,10 @@ public class Animation {
 		this.Animations = animations;
 	}
 
-	public void ChangeAnimation(string name) {
+	public void ChangeAnimation(string name, bool seamless = false) {
 		if (animation_name == name) return;
 		this.animation_name = name;
-		this.frame = Animations[animation_name][0].Frame;
+		if (!seamless) this.frame = Animations[animation_name][0].Frame;
 	}
 
 	public int GetAnimationX() {

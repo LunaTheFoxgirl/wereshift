@@ -21,17 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.entity;
+module wereshift.gameobject;
 public import wereshift.iovr;
 public import wereshift.level;
 public import polyplex.core;
 public import polyplex.math;
 
-public abstract class EntityFactory {
-	public abstract Entity Construct(Level level);
+public abstract class GameObjectFactory {
+	public abstract GameObject Construct(Level level);
 }
 
-public class Entity {
+public class GameObject {
 	protected Level parent;
 
 	this(Level parent) {

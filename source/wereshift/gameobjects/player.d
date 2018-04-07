@@ -25,10 +25,11 @@ module wereshift.entities.player;
 import wereshift.entity;
 import wereshift.animation;
 import wereshift.game;
+import wereshift.text;
 import std.stdio;
 
-public class PlayerFactory : EntityFactory {
-	public override Entity Construct(Level level) {
+public class PlayerFactory : GameObjectFactory {
+	public override GameObject Construct(Level level) {
 		return new Player(level);
 	}
 }
@@ -39,7 +40,12 @@ public enum Form {
 	Human
 }
 
-public class Player : Entity {
+public enum HideState {
+	Exposed,
+	Hidden
+}
+
+public class Player : GameObject {
 	private Texture2D wolf;
 	private Texture2D werewolf;
 	private Texture2D human;
@@ -47,6 +53,8 @@ public class Player : Entity {
 	private Animation wolf_anim;
 	private Animation werewolf_anim;
 	private Animation human_anim;
+
+	private Text text_drawer;
 
 	//private Animation current_anim;
 
@@ -68,6 +76,8 @@ public class Player : Entity {
 		wolf = content.LoadTexture("entities/player_wolf");
 		human = content.LoadTexture("entities/player_man");
 		werewolf = content.LoadTexture("entities/player_werewolf");
+
+		text_drawer = new Text(content, "fonts/test_font");
 
 		human_anim = new Animation([
 			"idle_dark": [
@@ -160,6 +170,16 @@ public class Player : Entity {
 			sprite_batch.Draw(wolf, new Rectangle(cast(int)Position.X, cast(int)Position.Y, wolf.Width/4, wolf.Height/4), new Rectangle(0, (640/4)*3, 320/4, 640/4), Color.White, flip);
 
 		}
+		sprite_batch.End();
+		sprite_batch.Begin();
+		Color c = Color.White;
+		Vector2 ex_size = text_drawer.MeasureString("Exposed", 2f);
+		Vector2 hd_size = text_drawer.MeasureString("Hidden", 2f);
+		if (InShade) c = Color.Gray;
+		text_drawer.DrawString(sprite_batch, "Exposed", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X - 16, cast(int)WereshiftGame.Bounds.Y - (cast(int)ex_size.Y*2) - 16), 2f, c);
+		if (InShade) c = Color.White;
+		if (!InShade) c = Color.Gray;
+		text_drawer.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)hd_size.X - 16, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y - 16), 2f, c);
 		sprite_batch.End();
 	}
 }
