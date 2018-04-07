@@ -22,22 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.entity;
-import wereshift.level;
-import polyplex.core;
-import polyplex.math;
+public import wereshift.iovr;
+public import wereshift.level;
+public import polyplex.core;
+public import polyplex.math;
 
 public abstract class EntityFactory {
-	public abstract Entity Construct();
+	public abstract Entity Construct(Level level);
 }
 
 public class Entity {
-	private Level parent;
+	protected Level parent;
 
 	this(Level parent) {
 		this.parent = parent;
 	}
 
-	public abstract void LoadContent();
+	public abstract void LoadContent(ContentManager content);
 	public abstract void Update(GameTimes game_time);
-	public abstract void Draw(GameTimes game_time);
+	public abstract void Draw(GameTimes game_time, SpriteBatch sprite_batch);
 }

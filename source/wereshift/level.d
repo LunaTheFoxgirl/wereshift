@@ -24,6 +24,8 @@ SOFTWARE.
 module wereshift.level;
 import wereshift.entity;
 import wereshift.entities;
+import wereshift.iovr;
+
 
 public class LevelGenerator {
 	private EntityFactory[] entity_generators;
@@ -33,6 +35,7 @@ public class LevelGenerator {
 public class Level {
 	public Player ThePlayer;
 	public Entity[] Entities;
+	public Camera2D Camera;
 
 	private ContentManager manager;
 
@@ -41,27 +44,32 @@ public class Level {
 	}
 
 	public void Generate() {
-		ThePlayer = new Player();
+		ThePlayer = new Player(this);
+		Camera = new Camera2D(Vector2(0, 0));
+		Camera.Zoom = 0.5f;
 	}
 
 	public void Init() {
+		ThePlayer.LoadContent(manager);
 		foreach(Entity e; Entities) {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
 	}
 
-	public void Update(GameTime game_time) {
+	public void Update(GameTimes game_time) {
+		ThePlayer.Update(game_time);
 		foreach(Entity e; Entities) {
 			if (!(e is null))
 				e.Update(game_time);
 		}
 	}
 
-	public void Draw(GameTime game_time) {
+	public void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		foreach(Entity e; Entities) {
 			if (!(e is null))
-				e.Draw(game_time);
+				e.Draw(game_time, sprite_batch);
 		}
+		ThePlayer.Draw(game_time, sprite_batch);
 	}
 }

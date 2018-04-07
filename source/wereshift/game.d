@@ -26,26 +26,47 @@ import polyplex.core;
 import polyplex.math;
 import polyplex.utils.logging;
 
+import wereshift.level;
+import wereshift.text;
+import std.conv;
+
 public class WereshiftGame : Game {
+
+	private Level current_level;
+	private static WereshiftGame this_game;
+	private Text f;
+
+	public static Vector2 Bounds() {
+		return Vector2(this_game.Window.Width, this_game.Window.Height);
+	}
 
 	this() {
 		super("Wereshift", new Rectangle(WindowPosition.Undefined, WindowPosition.Undefined, WindowPosition.Undefined, WindowPosition.Undefined));
+		this_game = this;
 	}
 
 	public override void Init() {
 		this.Content.ContentRoot = "content/";
-		
+		Window.AllowResizing = true;
+		Window.VSync = true;
 	}
 
 	public override void LoadContent() {
-
+		f = new Text(sprite_batch, this.Content, "fonts/test_font");
+		current_level = new Level(this.Content);
+		current_level.Generate();
+		current_level.Init();
 	}
 
 	public override void Update(GameTimes game_time) {
-
+		current_level.Update(game_time);
 	}
 
 	public override void Draw(GameTimes game_time) {
-
+		Drawing.ClearColor(Color.Black);
+		current_level.Draw(game_time, sprite_batch);
+		sprite_batch.Begin();
+		f.DrawString(Frametime.text ~ " MS frametime\nThis is a test", Vector2(32, 32), 2f);
+		sprite_batch.End();
 	}
 }
