@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.entities.player;
-import wereshift.entity;
+module wereshift.gameobjects.player;
+import wereshift.gameobject;
 import wereshift.animation;
 import wereshift.game;
 import wereshift.text;
