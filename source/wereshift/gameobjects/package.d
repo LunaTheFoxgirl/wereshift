@@ -27,3 +27,4 @@ public import wereshift.gameobjects.player;
 public import wereshift.gameobjects.villager;
 public import wereshift.gameobjects.ground;
 public import wereshift.gameobjects.house;
+public import wereshift.gameobjects.tree;

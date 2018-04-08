@@ -27,6 +27,9 @@ import wereshift.animation;
 import wereshift.game;
 import std.string;
 
+// Debugging
+import std.stdio;
+
 public enum Form {
 	Werewolf,
 	Wolf,
@@ -45,7 +48,7 @@ public class Player : GameObject {
 	private SpriteFlip flip = SpriteFlip.None;
 
 	// Movement
-	private float speed = 3f;
+	private float speed = 4f;
 	private float werewolf_boost = 2f;
 	private float wolf_boost = 5f;
 	private float sneak_slowdown = 2f;
@@ -162,9 +165,13 @@ public class Player : GameObject {
 
 	private MouseState last_state_m;
 	private KeyboardState last_state_k;
+	private MouseState state_m;
+	private KeyboardState state_k;
 	public override void Update(GameTimes game_time) {
-		KeyboardState state_k = Keyboard.GetState();
-		MouseState state_m = Mouse.GetState();
+		state_k = Keyboard.GetState();
+		state_m = Mouse.GetState();
+		if (last_state_k is null) last_state_k = state_k;
+		if (last_state_m is null) last_state_m = state_m;
 
 		this.LightingState = LightingState.Moonlit;
 		if (shaders > 0) {
@@ -177,6 +184,10 @@ public class Player : GameObject {
 		if (CurrentForm == Form.Werewolf) final_speed += werewolf_boost;
 		if (CurrentForm == Form.Wolf) final_speed += wolf_boost;
 
+		if (last_state_k.IsKeyUp(Keys.Down) && state_k.IsKeyDown(Keys.Down)) {
+			transform_player();
+		}
+		
 		// TODO: improve the input situration here, lol
 		if (state_k.IsKeyDown(Keys.Left)) {
 
@@ -236,9 +247,30 @@ public class Player : GameObject {
 
 		Hitbox = new Rectangle(cast(int)Position.X+80, cast(int)Position.Y, 64, player_tex.Height/8);
 
+		panic_transform_player();
+
 		// update states.
 		last_state_k = state_k;
 		last_state_m = state_m;
+	}
+
+	private void transform_player() {
+		writeln(CurrentForm);
+		if (CurrentForm == Form.Wolf) {
+			if (LightingState == LightState.InShade) {
+				this.CurrentForm = Form.Human;
+			} else {
+				this.CurrentForm = Form.Werewolf;
+			}
+			return;
+		}
+		this.CurrentForm = Form.Wolf;
+	}
+
+	private void panic_transform_player() {
+		if ((this.CurrentForm == Form.Human && LightingState == LightState.Moonlit) || 
+			(this.CurrentForm == Form.Werewolf && LightingState == LightState.InShade))
+			this.CurrentForm = Form.Wolf;
 	}
 
 	private void handle_camera() {

@@ -60,9 +60,9 @@ public class Level {
 
 	// Zoom
 	private bool zoom_direction = false;
-	private float zoom_value = 0.8f;
-	private float zoom_min = 0.8f;
-	private float zoom_max = 0.9f;
+	private float zoom_value = 0.75f;
+	private float zoom_min = 0.75f;
+	private float zoom_max = 0.8f;
 	private float zoom_iter = 0.0005f;
 
 
@@ -96,21 +96,26 @@ public class Level {
 		the_ground.LoadContent(manager);
 
 		Random r = new Random();
-		foreach(i; 0 .. r.Next(5, 15)) {
-			Entities ~= new Villager(this, Vector2(r.Next(512, (LevelSizePX-512)), 0));
+
+		int tree_amount = r.Next(10, 20);
+		Vector2 last_treepoint = Vector2(128f, 0f);
+		foreach(i; 0 .. tree_amount ) {
+			int offset = cast(int)last_treepoint.X + (r.Next(64, 256)*10);
+			Scenery ~= new Tree(this, Vector2(offset, 0));
+			last_treepoint = Vector2(offset, 0f);
 		}
-		
+
 		int house_amount = r.Next(5, 8);
 		foreach(i; 0 .. house_amount) {
 			Scenery ~= new House(this, Vector2(i, house_amount));
 		}
 
-		foreach(GameObject e; Entities) {
+		foreach(GameObject e; Scenery) {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
 
-		foreach(GameObject e; Scenery) {
+		foreach(GameObject e; Entities) {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
