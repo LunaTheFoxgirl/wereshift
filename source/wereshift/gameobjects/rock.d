@@ -21,21 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.gameobjects.tree;
+module wereshift.gameobjects.rock;
 import wereshift.gameobject;
+import wereshift.animation;
 import wereshift.game;
 import wereshift.random;
 
-private enum TreeType {
-	Birch = 0,
-	Pine = 1
-}
-
-public class Tree : GameObject {
+public class Rock : GameObject {
 	// Looks
-	private static Texture2D TreeTexture;
+	private static Texture2D RockTexture;
 	private static Random rng;
-	private TreeType type;
+	private int type;
 
 	// Collission
 	public Rectangle Hitbox;
@@ -45,22 +41,22 @@ public class Tree : GameObject {
 	}
 
 	public override void LoadContent(ContentManager content) {
-		if (TreeTexture is null) TreeTexture = content.LoadTexture("terrain/trees");
+		if (RockTexture is null) RockTexture = content.LoadTexture("terrain/rocks");
 		if (rng is null) rng = new Random();
-		type = cast(TreeType)rng.Next(0, 2);
+		type = rng.Next(0, 2);
 		this.Hitbox = new Rectangle(cast(int)this.spawn_point.X+201, -512, 60, 512);
 	}
 
 	public override void Update(GameTimes game_time) {
 		if (parent.ThePlayer.Hitbox.Intersects(this.Hitbox)) {
-			parent.ThePlayer.Shade();
+			//parent.ThePlayer.Shade();
 		}
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		sprite_batch.Draw(TreeTexture, 
-			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-TreeTexture.Height, TreeTexture.Width/2, TreeTexture.Height), 
-			new Rectangle(cast(int)type*(TreeTexture.Width/2), 0, TreeTexture.Width/2, TreeTexture.Height), 
+		sprite_batch.Draw(RockTexture, 
+			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-RockTexture.Height, RockTexture.Width/2, RockTexture.Height), 
+			new Rectangle(cast(int)type*(RockTexture.Width/2), 0, RockTexture.Width/2, RockTexture.Height), 
 			Color.White);
 	}
 }

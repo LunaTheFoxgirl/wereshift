@@ -75,6 +75,7 @@ public class House : GameObject {
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		
 		sprite_batch.Draw(HouseTexture, 
 			new Rectangle(cast(int)spawn_point.X, -HouseTexture.Height, HouseTexture.Width, HouseTexture.Height), 
 			new Rectangle(0, 0, HouseTexture.Width, HouseTexture.Height), 

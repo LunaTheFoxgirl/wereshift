@@ -109,11 +109,18 @@ public class Player : GameObject {
 				new AnimationData(2, 0, 10),
 				new AnimationData(3, 0, 10)
 			],
+			"human_crouch": [
+				new AnimationData(4, 0, 10)
+			],
 			"human_walk": [
 				new AnimationData(0, 1, 10),
 				new AnimationData(1, 1, 10),
 				new AnimationData(2, 1, 10),
-				new AnimationData(3, 1, 10)
+				new AnimationData(3, 1, 10),
+				new AnimationData(4, 1, 10),
+				new AnimationData(5, 1, 10),
+				new AnimationData(6, 1, 10),
+				new AnimationData(7, 1, 10)
 			],
 			"wolf_dark_idle": [
 				new AnimationData(0, 2, 20),
@@ -255,7 +262,6 @@ public class Player : GameObject {
 	}
 
 	private void transform_player() {
-		writeln(CurrentForm);
 		if (CurrentForm == Form.Wolf) {
 			if (LightingState == LightState.InShade) {
 				this.CurrentForm = Form.Human;
@@ -293,8 +299,9 @@ public class Player : GameObject {
 				0f);
 		}
 
-		if (!this.watchers > 0) parent.ZoomOutCamera();
+		if (this.watchers > 0) parent.ZoomOutCamera();
 		else parent.ZoomInCamera();
+		this.watchers = 0;
 	}
 
 	private void handle_animation() {

@@ -45,6 +45,7 @@ public class Level {
 	public Player ThePlayer;
 	public GameObject[] Entities = [];
 	public GameObject[] Scenery = [];
+	public GameObject[] ForegroundScenery = [];
 	public Camera2D Camera;
 
 	public Text text_handler;
@@ -97,11 +98,23 @@ public class Level {
 
 		Random r = new Random();
 
-		int tree_amount = r.Next(10, 20);
+		int tree_amount = LevelSizePX/2;
 		Vector2 last_treepoint = Vector2(128f, 0f);
+		Vector2 last_rockpoint = Vector2(0f, 0f);
+		Vector2 last_bushpoint = Vector2(0f, 0f);
 		foreach(i; 0 .. tree_amount ) {
 			int offset = cast(int)last_treepoint.X + (r.Next(64, 256)*10);
+			int offset_rock = cast(int)last_rockpoint.X + (r.Next(128, 256)*10);
+			int offset_bush = cast(int)last_rockpoint.X + (r.Next(128, 256)*10);
+
+			// Escape, we're done planting trees dammit!
+			if (offset > LevelSizePX) break;
 			Scenery ~= new Tree(this, Vector2(offset, 0));
+			ForegroundScenery ~= new Rock(this, Vector2(offset_rock, 0));
+			ForegroundScenery ~= new Bush(this, Vector2(offset_bush, 0));
+
+			last_rockpoint = Vector2(offset_rock, 0f);
+			last_bushpoint = Vector2(offset_rock, 0f);
 			last_treepoint = Vector2(offset, 0f);
 		}
 
@@ -116,6 +129,11 @@ public class Level {
 		}
 
 		foreach(GameObject e; Entities) {
+			if (!(e is null))
+				e.LoadContent(manager);
+		}
+
+		foreach(GameObject e; ForegroundScenery) {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
@@ -144,6 +162,11 @@ public class Level {
 				e.Update(game_time);
 		}
 
+		foreach(GameObject e; ForegroundScenery) {
+			if (!(e is null))
+				e.Update(game_time);
+		}
+
 		handle_zoom();
 	}
 
@@ -161,6 +184,12 @@ public class Level {
 		}
 
 		ThePlayer.Draw(game_time, sprite_batch);
+
+		foreach(GameObject e; ForegroundScenery) {
+			if (!(e is null))
+				e.Draw(game_time, sprite_batch);
+		}
+
 		the_ground.Draw(game_time, sprite_batch);
 		sprite_batch.End();
 		
