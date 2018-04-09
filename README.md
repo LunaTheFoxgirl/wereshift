@@ -12,3 +12,6 @@ TODO
 
 ## Art
  * Sean "Shramper" Browning
+
+
+### For more indepth description of folder structure, check README_DESCR.md
