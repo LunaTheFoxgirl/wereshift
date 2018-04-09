@@ -52,6 +52,8 @@ public class Player : GameObject {
 	private float werewolf_boost = 2f;
 	private float wolf_boost = 5f;
 	private float sneak_slowdown = 2f;
+	private bool is_crouching = false;
+	private bool is_grounded = true;
 	public Vector2 Position = Vector2(0f, 0f);
 
 	// Collission
@@ -59,6 +61,9 @@ public class Player : GameObject {
 
 	// Forms
 	public Form CurrentForm = Form.Wolf;
+	private int transform_counter = 0;
+	private int transform_max = 50;
+	private bool allow_transform = true;
 
 	// Stealth
 	public HideState HiddenState = HideState.Hidden;
@@ -128,6 +133,9 @@ public class Player : GameObject {
 				new AnimationData(2, 2, 20),
 				new AnimationData(3, 2, 20)
 			],
+			"wolf_dark_crouch": [
+				new AnimationData(4, 2, 20)
+			],
 			"wolf_dark_walk": [
 				new AnimationData(0, 3, 11),
 				new AnimationData(1, 3, 11),
@@ -139,6 +147,9 @@ public class Player : GameObject {
 				new AnimationData(1, 4, 15),
 				new AnimationData(2, 4, 15),
 				new AnimationData(3, 4, 15)
+			],
+			"wolf_light_crouch": [
+				new AnimationData(4, 4, 15)
 			],
 			"wolf_light_walk": [
 				new AnimationData(0, 5, 10),
@@ -153,6 +164,9 @@ public class Player : GameObject {
 				new AnimationData(3, 6, 10),
 				new AnimationData(4, 6, 10),
 				new AnimationData(5, 6, 10)
+			],
+			"werewolf_crouch": [
+				new AnimationData(6, 6, 10)
 			],
 			"werewolf_walk": [
 				new AnimationData(0, 7, 5),
@@ -191,61 +205,93 @@ public class Player : GameObject {
 		if (CurrentForm == Form.Werewolf) final_speed += werewolf_boost;
 		if (CurrentForm == Form.Wolf) final_speed += wolf_boost;
 
-		if (last_state_k.IsKeyUp(Keys.Down) && state_k.IsKeyDown(Keys.Down)) {
-			transform_player();
+		is_crouching = false;
+		if (is_grounded && state_k.IsKeyDown(Keys.Down)) {
+			is_crouching = true;
+			if (allow_transform) transform_counter++;
 		}
 		
-		// TODO: improve the input situration here, lol
-		if (state_k.IsKeyDown(Keys.Left)) {
+		if (is_crouching && transform_counter >= transform_max && allow_transform) {
+			allow_transform = false;
+			transform_player();
+			transform_counter = 0;
+		}
 
-			Position -= Vector2(final_speed, 0f);
-
-			// Animation
-			if (this.CurrentForm == Form.Human) {
-				player_anim.ChangeAnimation("human_walk");
-			} else if (this.CurrentForm == Form.Wolf) {
-				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
-				else player_anim.ChangeAnimation("wolf_light_walk");
+		if (is_crouching) {
+			if (CurrentForm == Form.Human) {
+				player_anim.ChangeAnimation("human_crouch", true);
+			} else if (CurrentForm == Form.Wolf) {
+				if (LightingState == LightState.InShade) player_anim.ChangeAnimation("wolf_light_crouch", true);
+				else player_anim.ChangeAnimation("wolf_dark_crouch", true);
 			} else {
-				player_anim.ChangeAnimation("werewolf_walk");
-			}
-
-			flip = SpriteFlip.FlipVertical;
-		} else if (state_k.IsKeyDown(Keys.Right)) {
-
-			Position += Vector2(final_speed, 0f);
-
-			// Animation
-			if (this.CurrentForm == Form.Human) {
-				player_anim.ChangeAnimation("human_walk");
-			} else if (this.CurrentForm == Form.Wolf) {
-				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
-				else player_anim.ChangeAnimation("wolf_light_walk");
-			} else {
-				player_anim.ChangeAnimation("werewolf_walk");
-			}
-
-			flip = SpriteFlip.None;
-		} else {
-
-			// Animation
-			bool s = (player_anim.AnimationName.endsWith("idle"));
-			if (this.CurrentForm == Form.Human) {
-				player_anim.ChangeAnimation("human_idle", s);
-			} else if (this.CurrentForm == Form.Wolf) {
-				if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_idle", s);
-				else player_anim.ChangeAnimation("wolf_light_idle", s);
-			} else {
-				player_anim.ChangeAnimation("werewolf_idle", s);
+				player_anim.ChangeAnimation("werewolf_crouch", true);
 			}
 		}
 
-		if (Position.X+((player_tex.Width/8)/4) < 0) {
-			Position = Vector2(-((player_tex.Width/8)/4), Position.Y);
+		if (!is_crouching) {
+			allow_transform = true;
+			transform_counter = 0;
+			// TODO: improve the input situration here, lol
+			if (state_k.IsKeyDown(Keys.Left)) {
+
+				Position -= Vector2(final_speed, 0f);
+
+				// Animation
+				if (this.CurrentForm == Form.Human) {
+					player_anim.ChangeAnimation("human_walk");
+				} else if (this.CurrentForm == Form.Wolf) {
+					if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
+					else player_anim.ChangeAnimation("wolf_light_walk");
+				} else {
+					player_anim.ChangeAnimation("werewolf_walk");
+				}
+
+				flip = SpriteFlip.FlipVertical;
+			} else if (state_k.IsKeyDown(Keys.Right)) {
+
+				Position += Vector2(final_speed, 0f);
+
+				// Animation
+				if (this.CurrentForm == Form.Human) {
+					player_anim.ChangeAnimation("human_walk");
+				} else if (this.CurrentForm == Form.Wolf) {
+					if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_walk");
+					else player_anim.ChangeAnimation("wolf_light_walk");
+				} else {
+					player_anim.ChangeAnimation("werewolf_walk");
+				}
+
+				flip = SpriteFlip.None;
+			} else {
+
+				// Animation
+				bool s = (player_anim.AnimationName.endsWith("idle"));
+				if (this.CurrentForm == Form.Human) {
+					player_anim.ChangeAnimation("human_idle", s);
+				} else if (this.CurrentForm == Form.Wolf) {
+					if (LightingState == LightingState.Moonlit) player_anim.ChangeAnimation("wolf_dark_idle", s);
+					else player_anim.ChangeAnimation("wolf_light_idle", s);
+				} else {
+					player_anim.ChangeAnimation("werewolf_idle", s);
+				}
+			}
+
+			if (Position.X+((player_tex.Width/8)/4) < 0) {
+				Position = Vector2(-((player_tex.Width/8)/4), Position.Y);
+			}
+
+			if (Position.X+(player_tex.Width/8) > parent.LevelSizePX) {
+				Position = Vector2(parent.LevelSizePX-(player_tex.Width/8), Position.Y);
+			}
 		}
 
-		if (Position.X+(player_tex.Width/8) > parent.LevelSizePX) {
-			Position = Vector2(parent.LevelSizePX-(player_tex.Width/8), Position.Y);
+		if (!is_grounded) {
+			// Just to be sure, reset this stuff while jumping
+			allow_transform = true;
+			transform_counter = 0;
+			is_crouching = false;
+
+			this.Position += Vector2(0, speed);
 		}
 
 		handle_camera();
@@ -255,6 +301,11 @@ public class Player : GameObject {
 		Hitbox = new Rectangle(cast(int)Position.X+80, cast(int)Position.Y, 64, player_tex.Height/8);
 
 		panic_transform_player();
+
+		if (Position.Y+(player_tex.Height/8) < 0) is_grounded = false;
+		else {
+			is_grounded = true;
+		}
 
 		// update states.
 		last_state_k = state_k;

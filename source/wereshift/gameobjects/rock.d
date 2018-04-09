@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.gameobjects.rock;
+import wereshift.gameobjects;
 import wereshift.gameobject;
 import wereshift.animation;
 import wereshift.game;
@@ -43,8 +44,13 @@ public class Rock : GameObject {
 	public override void LoadContent(ContentManager content) {
 		if (RockTexture is null) RockTexture = content.LoadTexture("terrain/rocks");
 		if (rng is null) rng = new Random();
-		type = rng.Next(0, 2);
+		type = rng.Next(0, 3);
 		this.Hitbox = new Rectangle(cast(int)this.spawn_point.X+201, -512, 60, 512);
+		foreach(GameObject e; parent.Houses) {
+			if ((cast(House)e).SpawnPoint.Distance(Vector2(this.spawn_point.X+201, 0)) < 1500) {
+				type = rng.Next(3, 7);
+			}
+		}
 	}
 
 	public override void Update(GameTimes game_time) {
@@ -55,8 +61,8 @@ public class Rock : GameObject {
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		sprite_batch.Draw(RockTexture, 
-			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-RockTexture.Height, RockTexture.Width/2, RockTexture.Height), 
-			new Rectangle(cast(int)type*(RockTexture.Width/2), 0, RockTexture.Width/2, RockTexture.Height), 
+			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-RockTexture.Height, RockTexture.Width/5, RockTexture.Height), 
+			new Rectangle(cast(int)type*(RockTexture.Width/5), 0, RockTexture.Width/5, RockTexture.Height), 
 			Color.White);
 	}
 }

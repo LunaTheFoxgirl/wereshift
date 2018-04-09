@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.game;
+import polyplex.core.render.gl.shader;
 import polyplex.core;
 import polyplex.math;
 import polyplex.utils.logging;
@@ -49,11 +50,10 @@ public class WereshiftGame : Game {
 	public override void Init() {
 		this.Content.ContentRoot = "content/";
 		Window.AllowResizing = true;
-		Window.VSync = true;
 	}
 
 	public override void LoadContent() {
-		f = new Text(sprite_batch, this.Content, "fonts/test_font");
+		f = new Text(sprite_batch, this.Content, "fonts/example_font");
 		current_level = new Level(this.Content);
 		current_level.Generate();
 		current_level.Init();
@@ -69,10 +69,9 @@ public class WereshiftGame : Game {
 		Drawing.ClearColor(bg);
 		if (Frametime > highest_frametime) highest_frametime = cast(int)Frametime;
 		if (Frametime <= highest_frametime-10) highest_frametime = cast(int)Frametime;
-
 		current_level.Draw(game_time, sprite_batch);
 		sprite_batch.Begin();
-		f.DrawString(Frametime.text ~ " MS frametime    " ~ highest_frametime.text ~ " ms highest recent frametime", Vector2(32, 32), 1f, Color.Red);
+		f.DrawString(Frametime.text ~ "ms", Vector2(32, 32), 1f, Color.Red);
 		sprite_batch.End();
 	}
 }

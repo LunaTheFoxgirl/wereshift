@@ -35,6 +35,10 @@ public class House : GameObject {
 	private static Random rng = null;
 	private static float last_house_pos = 0;
 
+	public Vector2 SpawnPoint() {
+		return spawn_point;
+	}
+
 	// Collission
 	public Rectangle Hitbox;
 

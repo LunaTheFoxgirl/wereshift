@@ -23,36 +23,36 @@ SOFTWARE.
 */
 module wereshift.text;
 import wereshift.iovr;
+import wereshift.random;
 import polyplex.core;
 import polyplex.math;
+import polyplex.core.render.gl.shader;
+import std.stdio;
 
 public class Text {
 	private Texture2D font_texture;
 	private SpriteBatch sprite_batch;
 	private ContentManager manager;
 	private Vector2i font_split;
+	private static Random rng;
 
 	this(SpriteBatch batcher, ContentManager man, string font_name, Vector2i font_split = Vector2i(10, 10)) {
 		this.sprite_batch = batcher;
 		this.manager = man;
 		this.font_texture = manager.LoadTexture(font_name);
 		this.font_split = font_split;
+		if (rng is null) rng = new Random();
 	}
 
 	this(ContentManager man, string font_name, Vector2i font_split = Vector2i(10, 10)) {
 		this.manager = man;
 		this.font_texture = manager.LoadTexture(font_name);
 		this.font_split = font_split;
+		if (rng is null) rng = new Random();
 	}
 
 	private Vector2 get_glyph(char chr) {
-		float chr_f = cast(float)chr-48;
-		if (chr >= 65) {
-			chr_f = cast(float)(chr-65)+10;
-		}
-		if (chr >= 97) {
-			chr_f = cast(float)(chr-97)+10+26;
-		}
+		float chr_f = cast(float)chr-33;
 		return Vector2(chr_f%font_split.X, (chr_f/font_split.Y)%font_split.Y);
 	}
 
@@ -68,14 +68,18 @@ public class Text {
 		return cursor_pos;
 	}
 
-	public void DrawString(string text, Vector2 position, float scale = 1f, Color color = Color.White) {
+	public void DrawString(string text, Vector2 position, float scale = 1f, Color color = Color.White, GameTimes game_time = null, bool shake = false, float intensity = 1f) {
 		Vector2 cursor_pos = position;
 		foreach(char c; text) {
+			Vector2 shake_offset = Vector2(0, 0);
+			if (shake) {
+				shake_offset = Vector2(Mathf.Sin(game_time.TotalTime.Seconds+cursor_pos.X+rng.Next())*intensity, Mathf.Cos(game_time.TotalTime.Seconds+cursor_pos.Y+rng.Next())*intensity);
+			}
 			Vector2 glyph_pos = get_glyph(c);
 			if (c != ' ' && c != '\n')
 			sprite_batch.Draw(
 				font_texture, 
-				new Rectangle(cast(int)cursor_pos.X, cast(int)cursor_pos.Y, (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
+				new Rectangle(cast(int)(cursor_pos.X+shake_offset.X), cast(int)(cursor_pos.Y+shake_offset.Y), (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
 				new Rectangle(cast(int)glyph_pos.X*(font_texture.Width/font_split.X), cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), font_texture.Width/font_split.X, font_texture.Height/font_split.Y),
 				color);
 			cursor_pos += Vector2(((font_texture.Width/font_split.X) - 2f)*scale, 0f);
@@ -86,14 +90,18 @@ public class Text {
 		}
 	}
 
-	public void DrawString(SpriteBatch sprite_batch, string text, Vector2 position, float scale = 1f, Color color = Color.White) {
+	public void DrawString(SpriteBatch sprite_batch, string text, Vector2 position, float scale = 1f, Color color = Color.White, GameTimes game_time = null, bool shake = false, float intensity = 1f) {
 		Vector2 cursor_pos = position;
 		foreach(char c; text) {
+			Vector2 shake_offset = Vector2(0, 0);
+			if (shake) {
+				shake_offset = Vector2(Mathf.Sin(game_time.TotalTime.Seconds+cursor_pos.X+rng.Next())*intensity, Mathf.Cos(game_time.TotalTime.Seconds+cursor_pos.Y+rng.Next())*intensity);
+			}
 			Vector2 glyph_pos = get_glyph(c);
 			if (c != ' ' && c != '\n')
 			sprite_batch.Draw(
 				font_texture, 
-				new Rectangle(cast(int)cursor_pos.X, cast(int)cursor_pos.Y, (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
+				new Rectangle(cast(int)(cursor_pos.X+shake_offset.X), cast(int)(cursor_pos.Y+shake_offset.Y), (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
 				new Rectangle(cast(int)glyph_pos.X*(font_texture.Width/font_split.X), cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), font_texture.Width/font_split.X, font_texture.Height/font_split.Y),
 				color);
 			cursor_pos += Vector2(((font_texture.Width/font_split.X) - 2f)*scale, 0f);

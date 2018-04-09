@@ -28,7 +28,9 @@ import wereshift.random;
 
 private enum TreeType {
 	Birch = 0,
-	Pine = 1
+	Pine = 1,
+	AppleTree = 2,
+	Dead = 3
 }
 
 public class Tree : GameObject {
@@ -47,7 +49,7 @@ public class Tree : GameObject {
 	public override void LoadContent(ContentManager content) {
 		if (TreeTexture is null) TreeTexture = content.LoadTexture("terrain/trees");
 		if (rng is null) rng = new Random();
-		type = cast(TreeType)rng.Next(0, 2);
+		type = cast(TreeType)rng.Next(0, 4);
 		this.Hitbox = new Rectangle(cast(int)this.spawn_point.X+201, -512, 60, 512);
 	}
 
@@ -59,8 +61,8 @@ public class Tree : GameObject {
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		sprite_batch.Draw(TreeTexture, 
-			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-TreeTexture.Height, TreeTexture.Width/2, TreeTexture.Height), 
-			new Rectangle(cast(int)type*(TreeTexture.Width/2), 0, TreeTexture.Width/2, TreeTexture.Height), 
+			new Rectangle(cast(int)spawn_point.X, cast(int)spawn_point.Y-TreeTexture.Height, TreeTexture.Width/4, TreeTexture.Height), 
+			new Rectangle(cast(int)type*(TreeTexture.Width/4), 0, TreeTexture.Width/4, TreeTexture.Height), 
 			Color.White);
 	}
 }
