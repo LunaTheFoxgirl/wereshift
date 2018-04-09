@@ -38,6 +38,8 @@ public class WereshiftGame : Game {
 	private static WereshiftGame this_game;
 	private Text f;
 
+	public static bool GoreOn = false;
+
 	public static Vector2 Bounds() {
 		return Vector2(this_game.Window.Width, this_game.Window.Height);
 	}

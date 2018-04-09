@@ -155,7 +155,7 @@ public class Level {
 			last_treepoint = Vector2(offset, 0f);
 		}
 
-		int house_amount = r.Next(5, 8);
+		int house_amount = r.Next(5, 12);
 		foreach(i; 0 .. house_amount) {
 			House h = new House(this, Vector2(i, house_amount));
 			h.LoadContent(manager);

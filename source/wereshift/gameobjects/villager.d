@@ -41,6 +41,16 @@ public enum VillagerGender {
 	Female
 }
 
+public enum PanicType {
+	WerewolfSeen,
+	WolfSeen,
+	WolfBitten,
+	WerewolfAttacked,
+
+	// Boundary for panic types.
+	DankMemes
+}
+
 public enum VillagerAIState {
 	Idle,
 	Moving,
@@ -57,6 +67,7 @@ public class Villager : GameObject {
 	// Looks
 	public static Texture2D VillagerMaleTex = null;
 	public static Texture2D VillagerFemaleTex = null;
+	private Color villager_draw_color;
 
 	private static Random rng = null;
 
@@ -73,13 +84,26 @@ public class Villager : GameObject {
 	private float speed = 3f;
 	private float panic_boost = 2f;
 
+	private float knockback_speed = 5f;
+	private float knockback_velocity = 0f;
+	private float knockback_drag = .1f;
+
+	private float knockback_power_wolf = 1f;
+	private float knockback_power_werewolf = 2f;
+
+	private int stun_frame = 0;
+	private int stun_frames = 100;
+
 	// AI Actions
 	private VillagerAIState AIState;
 	private VillagerAIMoveDirection AIMoveState = VillagerAIMoveDirection.Left;
 	private int decision_timer = 0;
 	private int decision_timeout = 500;
-
 	private float werewolf_panic_dist = 1000f;
+
+	public Rectangle Hitbox;
+	private int health = 100;
+	private int defense = 1;
 
 	this(Level parent, Vector2 spawnpoint) {
 		super(parent, spawnpoint);
@@ -95,7 +119,31 @@ public class Villager : GameObject {
 			Gender = VillagerGender.Female;
 		}
 		
+		// TODO: Add random defense for NPC, based on their weapons, etc.
+
 		this.AIState = VillagerAIState.Idle;
+	}
+
+	public bool Damage(Form player_form, int damage) {
+
+		// You can't damage an NPC being stunned
+		if (stun_frame > 0) return false;
+
+		// You can also not damage an NPC being knocked back.
+		if (knockback_velocity != 0) return false;
+
+		// Simple damage formular
+		this.health -= damage/defense;
+
+		// default knockback
+		float knockback = knockback_speed*knockback_power_wolf;
+
+		// Knockback harder if werewolf.
+		if (player_form == Form.Werewolf) {
+			knockback = knockback_speed*knockback_power_werewolf;
+		}
+		knockback_velocity = knockback;
+		return true;
 	}
 
 	public override void LoadContent(ContentManager content) {
@@ -161,11 +209,83 @@ public class Villager : GameObject {
 			]
 		]);
 		VillagerAnimation.ChangeAnimation("light_idle");
+		villager_draw_color = new Color(255, 255, 255, 255);
+		this.Hitbox = new Rectangle(cast(int)this.Position.X, cast(int)this.Position.Y, cast(int)render_bounds.X, cast(int)render_bounds.Y);
 	}
 
 	public override void Update(GameTimes game_time) {
-		VillagerAnimation.ChangeAnimation("light_idle", true);
+		this.Hitbox = new Rectangle(cast(int)this.Position.X, cast(int)this.Position.Y, cast(int)render_bounds.X, cast(int)render_bounds.Y);
 
+		if (health <= 0) {
+			// The NPC dead, remove from memory asap.
+
+			if (!WereshiftGame.GoreOn) {
+				// If the player prefers no gore, just make the villagers into spoopy ghost that flies offscreen.
+				villager_draw_color.Alpha = cast(int)(128);
+
+				this.Position -= Vector2(0, 4f);
+			} else {
+				// Gore the heck of of this.
+
+			}
+			// TODO: get level to dispose of corpse.
+
+			VillagerAnimation.Update();
+			return;
+		}
+
+		if (stun_frame >= 1) {
+			// The NPC is stunned, update here instead to do some color stuff.
+			knockback_velocity = 0f;
+
+			villager_draw_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Seconds)/2)+1)*255);
+
+			stun_frame--;
+			VillagerAnimation.Update();
+			return;
+		}
+
+		// Reset the transparency of the NPC if it's not the right value.
+		if (villager_draw_color.Alpha != 255)
+			villager_draw_color.Alpha = 255;
+
+		// Handle NPC ticks and knockback behaviour
+		if (knockback_velocity == 0)
+			handle_npc_behaviour();
+		else
+			handle_npc_knockback_behaviour();
+
+		// Handle NPCs straying too far from home.
+		handle_straying();
+
+		// Timeout between NPC decisions.
+		if (decision_timer >= decision_timeout) {
+			decision_timer = 0;
+			this.AIState = cast(VillagerAIState)rng.Next(0, 3);
+			
+			this.AIMoveState = cast(VillagerAIMoveDirection)rng.Next(0, 2);
+			HandleFlip(this.AIMoveState);
+			decision_timeout = rng.Next(30, 150);
+		}
+
+		decision_timer++;
+		VillagerAnimation.Update();
+	}
+
+	private void handle_npc_knockback_behaviour() {
+		// TODO: Hurt frames
+		if (knockback_velocity * knockback_drag <= knockback_drag) {
+			stun_frame = stun_frames;
+		}
+
+		// Reduce knockback speed overtime by drag.
+		knockback_velocity *= knockback_drag;
+
+		this.Position += Vector2(knockback_velocity, 0f);
+	}
+
+	private void handle_npc_behaviour() {
+		VillagerAnimation.ChangeAnimation("light_idle", true);
 		if (this.Position.Distance(parent.ThePlayer.Position) < werewolf_panic_dist) {
 			if (parent.ThePlayer.CurrentForm == Form.Werewolf) {
 				this.AIState = VillagerAIState.Panicking;
@@ -199,13 +319,15 @@ public class Villager : GameObject {
 				decision_timer = decision_timeout;
 			}
 		}
+	}
 
+	private void handle_straying() {
 		if (this.AIState == VillagerAIState.Moving) {
 			VillagerAnimation.ChangeAnimation("light_walk", true);
 			MoveDirection(this.AIMoveState);
 
 			// If the villager strays too far from home, go back home.
-			if (this.Position.Distance(this.spawn_point) > 1000f) {
+			if (this.Position.Distance(this.spawn_point) > 2000f) {
 				if (this.Position.X < spawn_point.X) {
 					this.AIMoveState = VillagerAIMoveDirection.Right;
 
@@ -216,19 +338,9 @@ public class Villager : GameObject {
 				MoveDirection(this.AIMoveState);
 			}
 		}
-
-		if (decision_timer >= decision_timeout) {
-			decision_timer = 0;
-			this.AIState = cast(VillagerAIState)rng.Next(0, 3);
-			
-			this.AIMoveState = cast(VillagerAIMoveDirection)rng.Next(0, 2);
-			HandleFlip(this.AIMoveState);
-			decision_timeout = rng.Next(30, 150);
-		}
-
-		decision_timer++;
-		VillagerAnimation.Update();
 	}
+
+
 
 	public void HandleFlip(VillagerAIMoveDirection direction) {
 		if (direction == VillagerAIMoveDirection.Right) {
@@ -256,14 +368,14 @@ public class Villager : GameObject {
 			sprite_batch.Draw(VillagerFemaleTex, 
 				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
 				new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
-				Color.White,
+				villager_draw_color,
 				flip);
 
 		if (Gender == VillagerGender.Male) 
 			sprite_batch.Draw(VillagerMaleTex,
 				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
 				new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
-				Color.White,
+				villager_draw_color,
 				flip);
 	}
 }
