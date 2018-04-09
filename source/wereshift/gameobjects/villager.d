@@ -84,12 +84,12 @@ public class Villager : GameObject {
 	private float speed = 3f;
 	private float panic_boost = 2f;
 
-	private float knockback_speed = 5f;
+	private float knockback_speed = 10f;
 	private float knockback_velocity = 0f;
-	private float knockback_drag = .1f;
+	private float knockback_drag = .90f;
 
-	private float knockback_power_wolf = 1f;
-	private float knockback_power_werewolf = 2f;
+	private float knockback_power_wolf = 2f;
+	private float knockback_power_werewolf = 3f;
 
 	private int stun_frame = 0;
 	private int stun_frames = 100;
@@ -124,7 +124,7 @@ public class Villager : GameObject {
 		this.AIState = VillagerAIState.Idle;
 	}
 
-	public bool Damage(Form player_form, int damage) {
+	public bool Damage(Form player_form, float player_velocity, int damage) {
 
 		// You can't damage an NPC being stunned
 		if (stun_frame > 0) return false;
@@ -142,7 +142,12 @@ public class Villager : GameObject {
 		if (player_form == Form.Werewolf) {
 			knockback = knockback_speed*knockback_power_werewolf;
 		}
-		knockback_velocity = knockback;
+
+		// Knockback directions.
+		if (player_velocity >= 0)
+			knockback_velocity = knockback;
+		else
+			knockback_velocity = -knockback;
 		return true;
 	}
 
@@ -235,6 +240,9 @@ public class Villager : GameObject {
 		}
 
 		if (stun_frame >= 1) {
+			// NPC sprite should be "fallen"
+			VillagerAnimation.ChangeAnimation("light_idle", true);
+
 			// The NPC is stunned, update here instead to do some color stuff.
 			knockback_velocity = 0f;
 
@@ -273,15 +281,17 @@ public class Villager : GameObject {
 	}
 
 	private void handle_npc_knockback_behaviour() {
+		// NPC sprite should be "fallen"
+		VillagerAnimation.ChangeAnimation("light_idle", true);
 		// TODO: Hurt frames
-		if (knockback_velocity * knockback_drag <= knockback_drag) {
+		if (Mathf.Abs(knockback_velocity) * knockback_drag <= knockback_drag) {
 			stun_frame = stun_frames;
 		}
 
+		this.Position += Vector2(knockback_velocity, 0f);
+
 		// Reduce knockback speed overtime by drag.
 		knockback_velocity *= knockback_drag;
-
-		this.Position += Vector2(knockback_velocity, 0f);
 	}
 
 	private void handle_npc_behaviour() {

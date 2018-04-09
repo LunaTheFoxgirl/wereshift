@@ -267,8 +267,9 @@ public class Player : GameObject {
 			foreach(GameObject v; parent.Entities) {
 				if ((cast(Villager)v).Hitbox.Intersects(this.Hitbox)) {
 					// If the player has applied damage to the NPC, halve the velocity.
-					if ((cast(Villager)v).Damage(CurrentForm, 50)) {
+					if ((cast(Villager)v).Damage(CurrentForm, x_velocity, 50)) {
 						x_velocity /= 2f;
+						break;
 					}
 				}
 			}

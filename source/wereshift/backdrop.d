@@ -37,6 +37,7 @@ import std.stdio;
 
 public class Backdrop {
 	private Texture2D moon;
+	private Texture2D ambient;
 
 	public GameTime Time() {
 		return current_time-start_time;
@@ -55,6 +56,7 @@ public class Backdrop {
 
 	this(ContentManager manager) {
 		moon = manager.LoadTexture("terrain/moon");
+		ambient = manager.LoadTexture("terrain/bg_ambient");
 	}
 
 	public void Update(GameTimes game_time) {
@@ -64,6 +66,10 @@ public class Backdrop {
 	}
 
 	public void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		sprite_batch.Draw(ambient,
+			new Rectangle(0, 0, cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
+			new Rectangle(0, 0, ambient.Width, ambient.Height),
+			Color.White);
 		sprite_batch.Draw(moon,
 			new Rectangle(
 				-moon.Width+cast(int)(cast(float)(WereshiftGame.Bounds.X+moon.Width)*PercentageThroughNight), 
