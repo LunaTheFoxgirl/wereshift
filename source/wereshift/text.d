@@ -79,8 +79,16 @@ public class Text {
 			if (c != ' ' && c != '\n')
 			sprite_batch.Draw(
 				font_texture, 
-				new Rectangle(cast(int)(cursor_pos.X+shake_offset.X), cast(int)(cursor_pos.Y+shake_offset.Y), (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
-				new Rectangle(cast(int)glyph_pos.X*(font_texture.Width/font_split.X), cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), font_texture.Width/font_split.X, font_texture.Height/font_split.Y),
+				new Rectangle(
+					cast(int)(cursor_pos.X+shake_offset.X), 
+					cast(int)(cursor_pos.Y+shake_offset.Y), 
+					cast(int)((font_texture.Width/font_split.X)*scale), 
+					cast(int)((font_texture.Height/font_split.Y)*scale)),
+				new Rectangle(
+					cast(int)glyph_pos.X*(font_texture.Width/font_split.X), 
+					cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), 
+					font_texture.Width/font_split.X, 
+					font_texture.Height/font_split.Y),
 				color);
 			cursor_pos += Vector2(((font_texture.Width/font_split.X) - 2f)*scale, 0f);
 			if (c == '\n') {
@@ -101,8 +109,16 @@ public class Text {
 			if (c != ' ' && c != '\n')
 			sprite_batch.Draw(
 				font_texture, 
-				new Rectangle(cast(int)(cursor_pos.X+shake_offset.X), cast(int)(cursor_pos.Y+shake_offset.Y), (font_texture.Width/font_split.X)*cast(int)scale, (font_texture.Height/font_split.Y)*cast(int)scale),
-				new Rectangle(cast(int)glyph_pos.X*(font_texture.Width/font_split.X), cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), font_texture.Width/font_split.X, font_texture.Height/font_split.Y),
+				new Rectangle(
+					cast(int)(cursor_pos.X+shake_offset.X), 
+					cast(int)(cursor_pos.Y+shake_offset.Y), 
+					cast(int)((font_texture.Width/font_split.X)*scale), 
+					cast(int)((font_texture.Height/font_split.Y)*scale)),
+				new Rectangle(
+					cast(int)glyph_pos.X*(font_texture.Width/font_split.X), 
+					cast(int)glyph_pos.Y*(font_texture.Height/font_split.Y), 
+					font_texture.Width/font_split.X, 
+					font_texture.Height/font_split.Y),
 				color);
 			cursor_pos += Vector2(((font_texture.Width/font_split.X) - 2f)*scale, 0f);
 			if (c == '\n') {

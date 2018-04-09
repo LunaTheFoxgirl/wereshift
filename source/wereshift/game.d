@@ -71,7 +71,7 @@ public class WereshiftGame : Game {
 		if (Frametime <= highest_frametime-10) highest_frametime = cast(int)Frametime;
 		current_level.Draw(game_time, sprite_batch);
 		sprite_batch.Begin();
-		f.DrawString(Frametime.text ~ "ms", Vector2(32, 32), 1f, Color.Red);
+		f.DrawString(Frametime.text ~ "ms", Vector2(8, 8), .4f, Color.Red);
 		sprite_batch.End();
 	}
 }
