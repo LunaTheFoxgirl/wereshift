@@ -41,6 +41,7 @@ public class Backdrop {
 
 	private Texture2D moon;
 	private Texture2D ambient;
+	private Texture2D mounts;
 	private Texture2D prlx_a;
 	private Texture2D prlx_b;
 	private Texture2D prlx_c;
@@ -68,6 +69,7 @@ public class Backdrop {
 	this(ContentManager manager, Level parent) {
 		moon = manager.LoadTexture("terrain/moon");
 		ambient = manager.LoadTexture("terrain/bg_ambient");
+		mounts = manager.LoadTexture("terrain/bg_mountains");
 		prlx_a = manager.LoadTexture("terrain/prlx_forest");
 		stars = manager.LoadTexture("terrain/stars");
 		star_animation = new Animation([
@@ -139,16 +141,23 @@ public class Backdrop {
 				moon.Height),
 			new Rectangle(0, 0, moon.Width, moon.Height),
 			Color.White);
+
+		
+		sprite_batch.Draw(mounts,
+			new Rectangle(0, -cast(int)(the_level.Camera.Position.Y/120f)-(cast(int)WereshiftGame.Bounds.Y/4), cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
+			new Rectangle(cast(int)(the_level.Camera.Position.X/100f), 0, cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
+			Color.White);
+
 		sprite_batch.Draw(prlx_a,
 			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-(32+16)-cast(int)(the_level.Camera.Position.Y/40f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/20f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			Color.White);
 		sprite_batch.Draw(prlx_a,
-			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-cast(int)(the_level.Camera.Position.Y/40f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
+			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-cast(int)(the_level.Camera.Position.Y/10f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/10f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			Color.White);
 		sprite_batch.Draw(prlx_a,
-			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)+32-cast(int)(the_level.Camera.Position.Y/40f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
+			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)+32-cast(int)(the_level.Camera.Position.Y/4f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/5f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			Color.White);
 	}
