@@ -142,23 +142,27 @@ public class Backdrop {
 			new Rectangle(0, 0, moon.Width, moon.Height),
 			Color.White);
 
-		
 		sprite_batch.Draw(mounts,
 			new Rectangle(0, -cast(int)(the_level.Camera.Position.Y/120f)-(cast(int)WereshiftGame.Bounds.Y/4), cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/100f), 0, cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
 			Color.White);
 
+		Color drk = new Color(128, 128, 128, 255);
 		sprite_batch.Draw(prlx_a,
 			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-(32+16)-cast(int)(the_level.Camera.Position.Y/40f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/20f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
-			Color.White);
+			drk);
+
+		drk = new Color(128+64, 128+64, 128+64, 255);
 		sprite_batch.Draw(prlx_a,
 			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-cast(int)(the_level.Camera.Position.Y/10f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/10f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
-			Color.White);
+			drk);
+
+		drk = Color.White;
 		sprite_batch.Draw(prlx_a,
 			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)+32-cast(int)(the_level.Camera.Position.Y/4f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			new Rectangle(cast(int)(the_level.Camera.Position.X/5f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
-			Color.White);
+			drk);
 	}
 }
