@@ -41,21 +41,19 @@ public enum VillagerGender {
 	Female
 }
 
-public enum PanicType {
-	WerewolfSeen,
-	WolfSeen,
-	WolfBitten,
-	WerewolfAttacked,
-
-	// Boundary for panic types.
-	DankMemes
+public enum VillagerType {
+	Citizen,
+	TownCrier,
+	Guard,
+	Hunter,
+	Rifleman
 }
 
 public enum VillagerAIState {
 	Idle,
 	Moving,
-	Attacking,
-	Panicking
+	Suspicious,
+	InDanger
 }
 
 public enum VillagerAIMoveDirection {
@@ -95,15 +93,19 @@ public class Villager : GameObject {
 	private int stun_frames = 100;
 
 	// AI Actions
-	private VillagerAIState AIState;
-	private VillagerAIMoveDirection AIMoveState = VillagerAIMoveDirection.Left;
+	public VillagerType AIType = VillagerType.Citizen;
+	public VillagerAIState AIState;
+	public VillagerAIMoveDirection AIMoveState = VillagerAIMoveDirection.Left;
 	private int decision_timer = 0;
 	private int decision_timeout = 500;
-	private float werewolf_panic_dist = 1000f;
+	private float werewolf_panic_dist = 600f;
+	private bool has_seen_player_transform = false;
 
 	public Rectangle Hitbox;
 	private int health = 100;
 	private int defense = 1;
+
+	private bool in_house = false;
 
 	this(Level parent, Vector2 spawnpoint) {
 		super(parent, spawnpoint);
@@ -125,6 +127,9 @@ public class Villager : GameObject {
 	}
 
 	public bool Damage(Form player_form, float player_velocity, int damage) {
+
+		// I mean, how would you hurt an NPC hiding inside a house?
+		if (in_house) return false;
 
 		// You can't damage an NPC being stunned
 		if (stun_frame > 0) return false;
@@ -148,6 +153,15 @@ public class Villager : GameObject {
 			knockback_velocity = knockback;
 		else
 			knockback_velocity = -knockback;
+
+		if (health <= 0) {
+			foreach(GameObject villager; parent.Entities) {
+				Villager v = (cast(Villager)villager);
+				if (v.same_direction_as(parent.ThePlayer.Position) && v.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) < 600f) {
+					v.AIState = VillagerAIState.InDanger;
+				}
+			}
+		}
 		return true;
 	}
 
@@ -219,6 +233,7 @@ public class Villager : GameObject {
 	}
 
 	public override void Update(GameTimes game_time) {
+		if (in_house) return;
 		this.Hitbox = new Rectangle(cast(int)this.Position.X, cast(int)this.Position.Y, cast(int)render_bounds.X, cast(int)render_bounds.Y);
 
 		if (health <= 0) {
@@ -264,10 +279,16 @@ public class Villager : GameObject {
 			handle_npc_knockback_behaviour();
 
 		// Handle NPCs straying too far from home.
-		handle_straying();
+		// Except, if in danger, don't care if they run away from home
+		if (this.AIState != VillagerAIState.InDanger) handle_straying();
+
+		int tm = decision_timeout;
+
+		// Panics last twice as long.
+		if (this.AIState == VillagerAIState.InDanger) tm *= 10;
 
 		// Timeout between NPC decisions.
-		if (decision_timer >= decision_timeout) {
+		if (decision_timer >= tm) {
 			decision_timer = 0;
 			this.AIState = cast(VillagerAIState)rng.Next(0, 3);
 			
@@ -280,6 +301,69 @@ public class Villager : GameObject {
 		VillagerAnimation.Update();
 	}
 
+	public void UpdatePlayerKnowledgeState(bool has_transformed) {
+		// Check if player is transforming
+		set_player_transform_knowledge(has_transformed);
+	}
+
+	private void set_player_transform_knowledge(bool transform) {
+		if (same_direction_as(parent.ThePlayer.Hitbox.Center)) {
+			if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) < 600f) {
+				if (transform) has_seen_player_transform = true;
+			}
+		}
+	}
+
+	// HANDLE SUSPICIOUS AISTATE
+	private void handle_npc_suspic_behaviour() {
+
+	}
+
+	// HANDLE INDANGER AISTATE
+	private void handle_npc_danger_behaviour() {
+		if (AIType == VillagerType.Citizen) {
+			// Villager is a wimp and panicking.
+			VillagerAnimation.ChangeAnimation("light_panic", true);
+
+			// Move thowards spawn point/house
+			// If player is in the way, run away from them!
+			if (this.Position.X < spawn_point.X) {
+				
+				// Run thowards spawn
+				this.AIMoveState = VillagerAIMoveDirection.Right;
+
+				if (parent.ThePlayer.Hitbox.Center.X > spawn_point.X)
+					this.AIMoveState = VillagerAIMoveDirection.Left;
+			} else if (this.Position.X > spawn_point.X) {
+
+				// Run thowards spawn
+				this.AIMoveState = VillagerAIMoveDirection.Left;
+
+				if (parent.ThePlayer.Hitbox.Center.X < spawn_point.X)
+					this.AIMoveState = VillagerAIMoveDirection.Right;
+			}
+
+			// Apply move direction.
+			MoveDirection(this.AIMoveState);
+
+			// tell the player that THEY HAVE BEEN SEEN.
+			parent.ThePlayer.SeePlayer();
+
+			// Share the panic/in danger state with fellow villagers if you meet them.
+			foreach(GameObject other_villager; parent.Entities) {
+				if (other_villager != this) {
+					if ((cast(Villager)other_villager).Hitbox.Intersects(this.Hitbox)) {
+						(cast(Villager)other_villager).AIState = VillagerAIState.InDanger;
+					}
+				}
+			}
+		} else {
+			// The villager is *not* a wimp AND WANTS TO BATTLE!
+		}
+
+	}
+
+	// HANDLE KNOCKBACK BEHAVIOUR
 	private void handle_npc_knockback_behaviour() {
 		// NPC sprite should be "fallen"
 		VillagerAnimation.ChangeAnimation("light_idle", true);
@@ -292,42 +376,48 @@ public class Villager : GameObject {
 
 		// Reduce knockback speed overtime by drag.
 		knockback_velocity *= knockback_drag;
+
+		// Once the npc gets back up PANIC!
+		this.AIState = VillagerAIState.InDanger;
+		decision_timer = 0;
+	}
+
+	private bool same_direction_as(Vector2 dir) {
+		if (dir.X < this.Hitbox.Center.X && this.AIMoveState == VillagerAIMoveDirection.Left) return true;
+		if (dir.X >= this.Hitbox.Center.X && this.AIMoveState == VillagerAIMoveDirection.Right) return true;
+		return false;
 	}
 
 	private void handle_npc_behaviour() {
 		VillagerAnimation.ChangeAnimation("light_idle", true);
+
+		// InDanger.
 		if (this.Position.Distance(parent.ThePlayer.Position) < werewolf_panic_dist) {
-			if (parent.ThePlayer.CurrentForm == Form.Werewolf) {
-				this.AIState = VillagerAIState.Panicking;
+			if (parent.ThePlayer.CurrentForm == Form.Werewolf && this.AIState != VillagerAIState.InDanger) {
+				// Check if the villager is looking at the player.
+				if (same_direction_as(parent.ThePlayer.Hitbox.Center)) {
+					decision_timer = 0;
+					this.AIState = VillagerAIState.InDanger;
+				}
 			}
 		}
 
 		if (this.Position.Distance(parent.ThePlayer.Position) < werewolf_panic_dist/2) {
 			if (parent.ThePlayer.CurrentForm == Form.Wolf) {
-				this.AIState = VillagerAIState.Panicking;
+				// Check if the villager is looking at the player.
+				if (same_direction_as(parent.ThePlayer.Hitbox.Center)) {
+					decision_timer = 0;
+					this.AIState = VillagerAIState.Suspicious;
+				}
 			}
 		}
 
-		if (this.AIState == VillagerAIState.Panicking) {
-			if (this.Position.Distance(parent.ThePlayer.Position) < 1000f) {
-				VillagerAnimation.ChangeAnimation("light_panic", true);
+		if (this.AIState == VillagerAIState.InDanger) {
+			handle_npc_danger_behaviour();
+		}
 
-				if (this.Position.X < spawn_point.X) {
-					this.AIMoveState = VillagerAIMoveDirection.Right;
-
-				} else if (this.Position.X > spawn_point.X) {
-					this.AIMoveState = VillagerAIMoveDirection.Left;
-
-				}
-				MoveDirection(this.AIMoveState);
-				parent.ThePlayer.SeePlayer();
-
-				// TODO: Make them enter the first available house, and/or notify other villagers.
-
-			} else {
-				// It's out of harm's way for now, let it decide something else to do.
-				decision_timer = decision_timeout;
-			}
+		if (this.AIState == VillagerAIState.Suspicious) {
+			handle_npc_suspic_behaviour();
 		}
 	}
 
@@ -350,8 +440,6 @@ public class Villager : GameObject {
 		}
 	}
 
-
-
 	public void HandleFlip(VillagerAIMoveDirection direction) {
 		if (direction == VillagerAIMoveDirection.Right) {
 			this.flip = SpriteFlip.None;
@@ -363,7 +451,7 @@ public class Villager : GameObject {
 	public void MoveDirection(VillagerAIMoveDirection direction) {
 		float move_speed = speed;
 		// If the villager is in panic, add a little speed boost.
-		if (this.AIState == VillagerAIState.Panicking)
+		if (this.AIState == VillagerAIState.InDanger)
 			move_speed += panic_boost;
 		
 		// Move in specified direction
@@ -373,7 +461,12 @@ public class Villager : GameObject {
 		HandleFlip(direction);
 	}
 
+	public void EnterHouse() {
+		in_house = true;
+	}
+
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		if (in_house) return;
 		if (Gender == VillagerGender.Female) 
 			sprite_batch.Draw(VillagerFemaleTex, 
 				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),

@@ -80,6 +80,7 @@ public class Player : GameObject {
 
 	public void SeePlayer() {
 		watchers++;
+		HiddenState = HideState.Exposed;
 	}
 
 	public void ForgetPlayer() {
@@ -93,6 +94,7 @@ public class Player : GameObject {
 	//Health
 	private float health = 100f;
 	private float defense = 10f;
+	private float overtime_damage = .005f;
 
 	public float Health() {
 		return health;
@@ -315,6 +317,7 @@ public class Player : GameObject {
 		handle_animation();
 
 		panic_transform_player();
+		health -= overtime_damage;
 
 		// update states.
 		last_state_k = state_k;
@@ -387,7 +390,13 @@ public class Player : GameObject {
 			} else {
 				this.CurrentForm = Form.Werewolf;
 			}
+			foreach(GameObject go; parent.Entities) {
+				(cast(Villager)go).UpdatePlayerKnowledgeState(true);
+			}
 			return;
+		}
+		foreach(GameObject go; parent.Entities) {
+			(cast(Villager)go).UpdatePlayerKnowledgeState(true);
 		}
 		this.CurrentForm = Form.Wolf;
 	}
@@ -421,6 +430,7 @@ public class Player : GameObject {
 		if (this.watchers > 0) parent.ZoomOutCamera();
 		else parent.ZoomInCamera();
 		this.watchers = 0;
+		HiddenState = HideState.Hidden;
 	}
 
 	private void handle_animation() {

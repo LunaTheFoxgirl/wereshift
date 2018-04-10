@@ -55,7 +55,7 @@ public class WereshiftGame : Game {
 	}
 
 	public override void LoadContent() {
-		f = new Text(sprite_batch, this.Content, "fonts/example_font");
+		f = new Text(sprite_batch, this.Content, "fonts/shramp_sans");
 		current_level = new Level(this.Content);
 		current_level.Generate();
 		current_level.Init();

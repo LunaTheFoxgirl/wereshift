@@ -119,7 +119,7 @@ public class Level {
 	public void Generate() {
 		ThePlayer = new Player(this);
 		the_ground = new Ground(this);
-		text_handler = new Text(manager, "fonts/example_font");
+		text_handler = new Text(manager, "fonts/shramp_sans");
 		Camera = new Camera2D(Vector2(0, 0));
 		Camera.Zoom = 0.8f;
 		LevelSize = 90;
@@ -266,6 +266,7 @@ public class Level {
 		Color c = Color.White;
 		Vector2 ex_size = text_handler.MeasureString("Exposed", 1.5f);
 		Vector2 hd_size = text_handler.MeasureString("Hidden", 1.5f);
+		Vector2 he_size = text_handler.MeasureString(ThePlayer.Health.text, 1.5f);
 		Vector2 twn_size = text_handler.MeasureString(TownName, 2f);
 		string time = this.Background.Time.FormatTime("{0}:{1}");
 		Vector2 tm_size = text_handler.MeasureString(time, 1.5f);
@@ -280,7 +281,11 @@ public class Level {
 		else c = Color.Gray;
 		text_handler.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y), 1.5f, c, game_time, true);
 		
-		text_handler.DrawString(sprite_batch, TownName, Vector2((cast(int)WereshiftGame.Bounds.X/2) - (cast(int)twn_size.X/2), (cast(int)WereshiftGame.Bounds.Y/2) - cast(int)twn_size.Y/2), 2f, town_color, game_time, true, 2f);
+		float shake = (1f-(ThePlayer.Health/100f))*4f;
+
+		text_handler.DrawString(sprite_batch, ThePlayer.Health.text, Vector2(4, cast(int)WereshiftGame.Bounds.Y - cast(int)he_size.Y), 1.5f, Color.Red, game_time, true, shake);
+		
+		if (town_color.Alpha > 0) text_handler.DrawString(sprite_batch, TownName, Vector2((cast(int)WereshiftGame.Bounds.X/2) - (cast(int)twn_size.X/2), (cast(int)WereshiftGame.Bounds.Y/2) - cast(int)twn_size.Y/2), 2f, town_color, game_time, true, 2f);
 		text_handler.DrawString(sprite_batch, time, Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)tm_size.X, tm_size.Y/2), 1.5f, Color.White, game_time, true, 2f);
 
 		sprite_batch.End();

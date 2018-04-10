@@ -60,16 +60,16 @@ public class Animation {
 		if (!seamless) this.frame = Animations[animation_name][0].Frame;
 	}
 
-	public int GetAnimationX() {
-		return Animations[animation_name][frame%Animations[animation_name].length].Frame;
+	public int GetAnimationX(int offset = 0) {
+		return Animations[animation_name][(frame+offset)%Animations[animation_name].length].Frame;
 	}
 
-	public int GetAnimationY() {
-		return Animations[animation_name][frame%Animations[animation_name].length].Animation;
+	public int GetAnimationY(int offset = 0) {
+		return Animations[animation_name][(frame+offset)%Animations[animation_name].length].Animation;
 	}
 
-	public int GetAnimationTimeout() {
-		return Animations[animation_name][frame%Animations[animation_name].length].Timeout;
+	public int GetAnimationTimeout(int offset = 0) {
+		return Animations[animation_name][(frame+offset)%Animations[animation_name].length].Timeout;
 	}
 
 	public void Update() {
