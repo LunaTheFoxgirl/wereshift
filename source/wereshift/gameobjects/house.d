@@ -93,9 +93,11 @@ public class House : GameObject {
 			if (v.AIType == VillagerType.Citizen) {
 				if (v.AIState == VillagerAIState.InDanger) {
 					if (v.Hitbox.Intersects(this.Hitbox)) {
-						people++;
-						tex_offset.X = 1;
-						v.EnterHouse();
+						if (people < 2) {
+							people++;
+							tex_offset.X = 1;
+							v.EnterHouse();
+						}
 					}
 				}
 			}

@@ -26,6 +26,7 @@ import wereshift.gameobjects;
 import wereshift.gameobject;
 import wereshift.animation;
 import wereshift.game;
+import wereshift.text;
 import wereshift.random;
 
 import std.stdio;
@@ -65,6 +66,7 @@ public class Villager : GameObject {
 	// Looks
 	public static Texture2D VillagerMaleTex = null;
 	public static Texture2D VillagerFemaleTex = null;
+	private static Text villager_exclaim;
 	private Color villager_draw_color;
 
 	private static Random rng = null;
@@ -170,6 +172,9 @@ public class Villager : GameObject {
 			VillagerMaleTex = content.LoadTexture("entities/m_villager");	
 		if (VillagerFemaleTex is null)
 			VillagerFemaleTex = content.LoadTexture("entities/f_villager");
+
+		if (villager_exclaim is null)
+			villager_exclaim = new Text(content, "fonts/shramp_sans");
 
 		render_bounds = Vector2i(VillagerFemaleTex.Width/8, VillagerFemaleTex.Height/6);
 		this.Position -= Vector2(0f, render_bounds.Y);
@@ -467,6 +472,12 @@ public class Villager : GameObject {
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		if (in_house) return;
+
+		if (has_seen_player_transform) {
+			Vector2 mes = villager_exclaim.MeasureString("!", 2f);
+			villager_exclaim.DrawString(sprite_batch, "!", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Red);
+		}
+
 		if (Gender == VillagerGender.Female) 
 			sprite_batch.Draw(VillagerFemaleTex, 
 				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
