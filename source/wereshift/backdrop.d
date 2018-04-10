@@ -38,6 +38,10 @@ import std.stdio;
 public class Backdrop {
 	private Texture2D moon;
 	private Texture2D ambient;
+	private Texture2D prlx_a;
+	private Texture2D prlx_b;
+	private Texture2D prlx_c;
+	private Level the_level;
 
 	public GameTime Time() {
 		return current_time-start_time;
@@ -54,9 +58,11 @@ public class Backdrop {
 	private GameTime current_time = null;
 	private GameTime start_time = null;
 
-	this(ContentManager manager) {
+	this(ContentManager manager, Level parent) {
 		moon = manager.LoadTexture("terrain/moon");
 		ambient = manager.LoadTexture("terrain/bg_ambient");
+		prlx_a = manager.LoadTexture("terrain/prlx_forest");
+		this.the_level = parent;
 	}
 
 	public void Update(GameTimes game_time) {
@@ -77,6 +83,10 @@ public class Backdrop {
 				moon.Width, 
 				moon.Height),
 			new Rectangle(0, 0, moon.Width, moon.Height),
+			Color.White);
+		sprite_batch.Draw(prlx_a,
+			new Rectangle(0, (cast(int)WereshiftGame.Bounds.Y/2)-32-cast(int)(the_level.Camera.Position.Y/40f), cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
+			new Rectangle(cast(int)(the_level.Camera.Position.X/10f), 0,  cast(int)WereshiftGame.Bounds.X, prlx_a.Height),
 			Color.White);
 	}
 }

@@ -176,7 +176,7 @@ public class Level {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
-		Background = new Backdrop(manager);
+		Background = new Backdrop(manager, this);
 	}
 
 	private void handle_zoom() {
