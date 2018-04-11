@@ -228,7 +228,7 @@ public class Level {
 				town_color.Alpha = town_color.Alpha - 2;
 			}
 		}
-		if (ThePlayer.Health <= 0) {
+		if (!ThePlayer.Alive) {
 			dead_color.Alpha = dead_color.Alpha + 2;
 		}
 
@@ -273,7 +273,7 @@ public class Level {
 		sprite_batch.End();
 		
 		Color c = Color.White;
-		if (dead_color.Alpha > 0) {
+		if (!ThePlayer.Alive) {
 			Vector2 de_size = text_handler.MeasureString("You Died", 3f);
 			sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
 			Color bg_dead_color = new Color(0, 0, 0, dead_color.Alpha);

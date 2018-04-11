@@ -35,6 +35,8 @@ public class GameObject {
 	protected Level parent;
 	protected Vector2 spawn_point;
 
+	public bool Alive = true;
+
 	this(Level parent, Vector2 spawn_point) {
 		this.parent = parent;
 		this.spawn_point = spawn_point;

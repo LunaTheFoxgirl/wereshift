@@ -219,6 +219,7 @@ public class Player : GameObject {
 			handle_update_alive();
 		} else {
 			player_anim.ChangeAnimation("wolf_dead");
+			this.Alive = false;
 		}
 
 		// update states.

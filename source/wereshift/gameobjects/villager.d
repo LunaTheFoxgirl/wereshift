@@ -163,6 +163,7 @@ public class Villager : GameObject {
 					v.AIState = VillagerAIState.InDanger;
 				}
 			}
+			this.Alive = false;
 		}
 		return true;
 	}
