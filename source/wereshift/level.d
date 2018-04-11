@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.level;
+import polyplex.core.content.gl.textures;
+import polyplex.core.content.textures;
+
 import wereshift.gameobjects;
 import wereshift.gameobject;
 import wereshift.backdrop;
@@ -84,6 +87,8 @@ public class Level {
 	public int LevelSize;
 	public string TownName = "Unnamed Town";
 	public Backdrop Background;
+
+	public static Texture2D BoxTex;
 
 	public int LevelSizePX() {
 		return the_ground.GroundTexture.Width * LevelSize;
@@ -177,6 +182,7 @@ public class Level {
 				e.LoadContent(manager);
 		}
 		Background = new Backdrop(manager, this);
+		BoxTex = new GlTexture2D(new TextureImg(1, 1, [255, 255, 255, 255]));
 	}
 
 	private void handle_zoom() {
@@ -222,6 +228,9 @@ public class Level {
 				town_color.Alpha = town_color.Alpha - 2;
 			}
 		}
+		if (ThePlayer.Health <= 0) {
+			dead_color.Alpha = dead_color.Alpha + 2;
+		}
 
 		handle_zoom();
 		Background.Update(game_time);
@@ -230,7 +239,7 @@ public class Level {
 	private bool town_name_in = false;
 
 	private Color town_color;
-
+	private Color dead_color = new Color(255, 0, 0, 0);
 	public void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.LinearWrap, null, null);
 		Background.Draw(game_time, sprite_batch);
@@ -264,30 +273,41 @@ public class Level {
 		sprite_batch.End();
 		
 		Color c = Color.White;
-		Vector2 ex_size = text_handler.MeasureString("Exposed", 1.5f);
-		Vector2 hd_size = text_handler.MeasureString("Hidden", 1.5f);
-		Vector2 he_size = text_handler.MeasureString("HEALTH: " ~ ThePlayer.Health.text, 1.5f);
-		Vector2 twn_size = text_handler.MeasureString(TownName, 2f);
-		string time = this.Background.Time.FormatTime("{0}:{1}");
-		Vector2 tm_size = text_handler.MeasureString(time, 1.5f);
+		if (dead_color.Alpha > 0) {
+			Vector2 de_size = text_handler.MeasureString("You Died", 3f);
+			sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
+			Color bg_dead_color = new Color(0, 0, 0, dead_color.Alpha);
+			sprite_batch.Draw(
+				BoxTex, 
+				new Rectangle(0, 0, cast(int)WereshiftGame.Bounds.X, cast(int)WereshiftGame.Bounds.Y),
+				new Rectangle(0, 0, 1, 1),
+				bg_dead_color);
+			text_handler.DrawString(sprite_batch, "You Died", Vector2((cast(int)WereshiftGame.Bounds.X/2) - (cast(int)de_size.X/2), (cast(int)WereshiftGame.Bounds.Y/2) - cast(int)de_size.Y/2), 3f, dead_color, game_time, true, 3f);
+		} else {
+			Vector2 ex_size = text_handler.MeasureString("Exposed", 1.5f);
+			Vector2 hd_size = text_handler.MeasureString("Hidden", 1.5f);
+			Vector2 he_size = text_handler.MeasureString("HEALTH: " ~ ThePlayer.Health.text, 1.5f);
+			Vector2 twn_size = text_handler.MeasureString(TownName, 2f);
+			string time = this.Background.Time.FormatTime("{0}:{1}");
+			Vector2 tm_size = text_handler.MeasureString(time, 1.5f);
 
-		sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
-		// Display "Exposed" text.
-		if (ThePlayer.HiddenState == HideState.Hidden) c = Color.Gray;
-		text_handler.DrawString(sprite_batch, "Exposed", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - ((cast(int)ex_size.Y*2))), 1.5f, c, game_time, true, 2f);
-		
-		// Display "Hidden" text.
-		if (ThePlayer.HiddenState == HideState.Hidden) c = Color.White;
-		else c = Color.Gray;
-		text_handler.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y), 1.5f, c, game_time, true);
-		
-		float shake = (1f-(ThePlayer.Health/100f))*4f;
+			sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
+			// Display "Exposed" text.
+			if (ThePlayer.HiddenState == HideState.Hidden) c = Color.Gray;
+			text_handler.DrawString(sprite_batch, "Exposed", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - ((cast(int)ex_size.Y*2))), 1.5f, c, game_time, true, 2f);
+			
+			// Display "Hidden" text.
+			if (ThePlayer.HiddenState == HideState.Hidden) c = Color.White;
+			else c = Color.Gray;
+			text_handler.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y), 1.5f, c, game_time, true);
+			
+			float shake = (1f-(ThePlayer.Health/100f))*4f;
 
-		text_handler.DrawString(sprite_batch, "HEALTH: " ~ ThePlayer.Health.text, Vector2(4, cast(int)WereshiftGame.Bounds.Y - cast(int)he_size.Y), 1.5f, Color.Red, game_time, true, shake);
-		
-		if (town_color.Alpha > 0) text_handler.DrawString(sprite_batch, TownName, Vector2((cast(int)WereshiftGame.Bounds.X/2) - (cast(int)twn_size.X/2), (cast(int)WereshiftGame.Bounds.Y/2) - cast(int)twn_size.Y/2), 2f, town_color, game_time, true, 2f);
-		text_handler.DrawString(sprite_batch, time, Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)tm_size.X, tm_size.Y/2), 1.5f, Color.White, game_time, true, 2f);
-
+			text_handler.DrawString(sprite_batch, "HEALTH: " ~ ThePlayer.Health.text, Vector2(4, cast(int)WereshiftGame.Bounds.Y - cast(int)he_size.Y), 1.5f, Color.Red, game_time, true, shake);
+			
+			if (town_color.Alpha > 0) text_handler.DrawString(sprite_batch, TownName, Vector2((cast(int)WereshiftGame.Bounds.X/2) - (cast(int)twn_size.X/2), (cast(int)WereshiftGame.Bounds.Y/2) - cast(int)twn_size.Y/2), 2f, town_color, game_time, true, 2f);
+			text_handler.DrawString(sprite_batch, time, Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)tm_size.X, tm_size.Y/2), 1.5f, Color.White, game_time, true, 2f);
+		}
 		sprite_batch.End();
 	}
 }

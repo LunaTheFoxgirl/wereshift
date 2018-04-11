@@ -154,6 +154,9 @@ public class Player : GameObject {
 			"wolf_dark_jump": [
 				new AnimationData(4, 3, 11)
 			],
+			"wolf_dead": [
+				new AnimationData(4, 2, 20)
+			],
 			"wolf_light_idle": [
 				new AnimationData(0, 4, 15),
 				new AnimationData(1, 4, 15),
@@ -212,6 +215,18 @@ public class Player : GameObject {
 		if (last_state_k is null) last_state_k = state_k;
 		if (last_state_m is null) last_state_m = state_m;
 
+		if (this.health > 0) {
+			handle_update_alive();
+		} else {
+			player_anim.ChangeAnimation("wolf_dead");
+		}
+
+		// update states.
+		last_state_k = state_k;
+		last_state_m = state_m;
+	}
+
+	private void handle_update_alive() {
 		this.LightingState = LightingState.Moonlit;
 		if (shaders > 0) {
 			this.LightingState = LightState.InShade;
@@ -319,9 +334,6 @@ public class Player : GameObject {
 		panic_transform_player();
 		health -= overtime_damage;
 
-		// update states.
-		last_state_k = state_k;
-		last_state_m = state_m;
 	}
 
 	private void handle_normal_movement(float final_speed) {
