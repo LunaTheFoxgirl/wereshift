@@ -305,7 +305,7 @@ public class Villager : GameObject {
 		// Timeout between NPC decisions.
 		if (decision_timer >= tm) {
 			decision_timer = 0;
-			this.AIState = cast(VillagerAIState)rng.Next(0, 3);
+			this.AIState = cast(VillagerAIState)rng.Next(0, 2);
 			
 			this.AIMoveState = cast(VillagerAIMoveDirection)rng.Next(0, 2);
 			HandleFlip(this.AIMoveState);
@@ -331,7 +331,7 @@ public class Villager : GameObject {
 
 	// HANDLE SUSPICIOUS AISTATE
 	private void handle_npc_suspic_behaviour() {
-
+		if (has_seen_player_transform) this.AIState = VillagerAIState.InDanger;
 	}
 
 	// HANDLE INDANGER AISTATE
@@ -480,6 +480,10 @@ public class Villager : GameObject {
 		if (has_seen_player_transform) {
 			Vector2 mes = villager_exclaim.MeasureString("!", 2f);
 			villager_exclaim.DrawString(sprite_batch, "!", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Red);
+		}
+		if (this.AIState == VillagerAIState.Suspicious) {
+			Vector2 mes = villager_exclaim.MeasureString("?", 2f);
+			villager_exclaim.DrawString(sprite_batch, "?", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Yellow);
 		}
 
 		if (Gender == VillagerGender.Female) 
