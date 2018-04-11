@@ -109,6 +109,12 @@ public class Villager : GameObject {
 
 	private bool in_house = false;
 
+	public bool CanEnterHouse() {
+		if (knockback_velocity != 0) return false;
+		if (stun_frame != 0) return false;
+		return true;
+	}
+
 	this(Level parent, Vector2 spawnpoint) {
 		super(parent, spawnpoint);
 
@@ -164,6 +170,9 @@ public class Villager : GameObject {
 				}
 			}
 			this.Alive = false;
+			if (!WereshiftGame.GoreOn) {
+				parent.ThePlayer.KillSucceeded();
+			}
 		}
 		return true;
 	}
@@ -331,23 +340,13 @@ public class Villager : GameObject {
 			// Villager is a wimp and panicking.
 			VillagerAnimation.ChangeAnimation("light_panic", true);
 
-			// Move thowards spawn point/house
-			// If player is in the way, run away from them!
-			if (this.Position.X < spawn_point.X) {
-				
-				// Run thowards spawn
-				this.AIMoveState = VillagerAIMoveDirection.Right;
-
-				if (parent.ThePlayer.Hitbox.Center.X > spawn_point.X)
-					this.AIMoveState = VillagerAIMoveDirection.Left;
-			} else if (this.Position.X > spawn_point.X) {
-
-				// Run thowards spawn
+			// Run away from the player
+			if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
 				this.AIMoveState = VillagerAIMoveDirection.Left;
 
-				if (parent.ThePlayer.Hitbox.Center.X < spawn_point.X)
-					this.AIMoveState = VillagerAIMoveDirection.Right;
-			}
+			if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+				this.AIMoveState = VillagerAIMoveDirection.Right;
+
 
 			// Apply move direction.
 			MoveDirection(this.AIMoveState);

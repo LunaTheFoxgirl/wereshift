@@ -41,7 +41,7 @@ public class House : GameObject {
 	private static Random rng = null;
 	private static float last_house_pos = 0;
 	private int max_people = 2;
-	private int people = 0;
+	private Villager[2] people = [null, null];
 
 	private Vector2 tex_offset = Vector2(0, 0);
 
@@ -51,6 +51,7 @@ public class House : GameObject {
 
 	// Collission
 	public Rectangle Hitbox;
+	public Rectangle HitboxDoor;
 
 	this(Level parent, Vector2 spawn_point) {
 		super(parent, spawn_point);
@@ -77,6 +78,14 @@ public class House : GameObject {
 		// Set the position of the hitbox (for player shade levels)
 		this.Hitbox = new Rectangle(cast(int)(this.spawn_point.X+(TextureSplitted.X/4)), cast(int)this.spawn_point.Y, cast(int)(TextureSplitted.X/4)*2, cast(int)TextureSplitted.X);
 
+		if (tex_offset.Y == 0) {
+			this.HitboxDoor = new Rectangle(cast(int)this.spawn_point.X+910, cast(int)this.spawn_point.Y, 70, cast(int)TextureSplitted.X);
+		} else if (tex_offset.Y == 1) {
+			this.HitboxDoor = new Rectangle(cast(int)this.spawn_point.X+330, cast(int)this.spawn_point.Y, 90, cast(int)TextureSplitted.X);
+		} else {
+			this.HitboxDoor = new Rectangle(cast(int)this.spawn_point.X+910, cast(int)this.spawn_point.Y, 170, cast(int)TextureSplitted.X);
+		}
+
 		// Spawn villagers at house
 		foreach(i; 0 .. rng.Next(1, 3)) {
 			parent.Entities ~= new Villager(parent, Vector2(rng.Next(this.Hitbox.X, this.Hitbox.X+this.Hitbox.Width), 0));
@@ -88,24 +97,61 @@ public class House : GameObject {
 			parent.ThePlayer.Shade();
 		}
 		
-		foreach(GameObject villager; parent.Entities) {
-			Villager v = cast(Villager)villager;
-			if (v.AIType == VillagerType.Citizen) {
-				if (v.AIState == VillagerAIState.InDanger) {
-					if (v.Hitbox.Intersects(this.Hitbox)) {
-						if (people < 2) {
-							people++;
-							tex_offset.X = 1;
-							v.EnterHouse();
+		if (!is_full()) {
+			foreach(GameObject villager; parent.Entities) {
+				Villager v = cast(Villager)villager;
+				if (v.AIType == VillagerType.Citizen) {
+					if (v.AIState == VillagerAIState.InDanger) {
+						if (v.Hitbox.Intersects(this.HitboxDoor)) {
+							if (v.CanEnterHouse) {
+								if (!is_inside(v)) {
+									insert_free(v);
+									tex_offset.X = 1;
+									v.EnterHouse();
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 
-		if (people == 0) {
+		if (is_empty()) {
 			tex_offset.X = 0;
 		}
+	}
+
+	private void insert_free(Villager v) {
+		foreach(i; 0 .. people.length) {
+			if (people[i] is null) people[i] = v;
+		}
+	}
+
+	private void remove_this(Villager v) {
+		foreach(i; 0 .. people.length) {
+			if (people[i] is v) people[i] = null;
+		}
+	}
+
+	private bool is_full() {
+		foreach(Villager ve; people) {
+			if (ve is null) return false;
+		}
+		return true;
+	}
+
+	private bool is_empty() {
+		foreach(Villager ve; people) {
+			if (!(ve is null)) return false;
+		}
+		return true;
+	}
+
+	private bool is_inside(Villager v) {
+		foreach(Villager ve; people) {
+			if (v is ve) return true;
+		}
+		return false;
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {

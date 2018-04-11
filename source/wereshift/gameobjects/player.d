@@ -93,7 +93,7 @@ public class Player : GameObject {
 
 	//Health
 	private float health = 100f;
-	private float defense = 10f;
+	private float defense = 2f;
 	private float overtime_damage = .005f;
 
 	public float Health() {
@@ -102,6 +102,14 @@ public class Player : GameObject {
 
 	public void Damage(int amount) {
 		health -= amount/defense;
+	}
+
+	public void KillSucceeded() {
+		health += 5f;
+		if (health > 100f) {
+			health = 100f;
+			defense += 0.2f;
+		}
 	}
 
 	// Constructor
@@ -248,6 +256,11 @@ public class Player : GameObject {
 		// Only wolf and werewolf can jump!
 		if (is_grounded && CurrentForm != Form.Human && last_state_k.IsKeyUp(Keys.Space) && state_k.IsKeyDown(Keys.Space)) {
 			y_velocity = jump_velocity;
+			if (CurrentForm == Form.Werewolf) {
+				y_velocity = jump_velocity/2;
+				x_velocity = jump_velocity*2f;
+				if (flip == SpriteFlip.FlipVertical) x_velocity = -x_velocity;
+			}
 			is_grounded = false;
 		}
 
