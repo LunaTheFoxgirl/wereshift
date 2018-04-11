@@ -38,10 +38,15 @@ public class House : GameObject {
 		return Vector2(HouseTexture.Width/TextureSplit.X, HouseTexture.Height/TextureSplit.Y);
 	}
 
+	public static ResetHouseSpawn() {
+		last_house_pos = 0;
+	}
+
 	private static Random rng = null;
 	private static float last_house_pos = 0;
-	private int max_people = 2;
 	private Villager[2] people = [null, null];
+	private int[2] people_timer = [0, 0];
+	private int people_timeout = 200;
 
 	private Vector2 tex_offset = Vector2(0, 0);
 
@@ -116,6 +121,23 @@ public class House : GameObject {
 			}
 		}
 
+		if (!is_empty()) {
+			foreach(i; 0 .. people.length) {
+				if (people[i] is null) continue;
+				
+				if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) < 2000f) {
+					people_timer[i] = 0;
+				}
+				people_timer[i]++;
+				if (people_timer[i] >= people_timeout) {
+					people[i].LeaveHouse();
+					people[i].AIState = VillagerAIState.Idle;
+					remove_this(people[i]);
+					people_timer[i] = 0;
+				}
+			}
+		}
+
 		if (is_empty()) {
 			tex_offset.X = 0;
 		}
@@ -123,33 +145,36 @@ public class House : GameObject {
 
 	private void insert_free(Villager v) {
 		foreach(i; 0 .. people.length) {
-			if (people[i] is null) people[i] = v;
+			if (people[i] is null) {
+				people[i] = v;
+				return;
+			}
 		}
 	}
 
 	private void remove_this(Villager v) {
 		foreach(i; 0 .. people.length) {
-			if (people[i] is v) people[i] = null;
+			if (people[i] == v) people[i] = null;
 		}
 	}
 
 	private bool is_full() {
-		foreach(Villager ve; people) {
-			if (ve is null) return false;
+		foreach(i; 0 .. people.length) {
+			if (people[i] is null) return false;
 		}
 		return true;
 	}
 
 	private bool is_empty() {
-		foreach(Villager ve; people) {
-			if (!(ve is null)) return false;
+		foreach(i; 0 .. people.length) {
+			if (!(people[i] is null)) return false;
 		}
 		return true;
 	}
 
 	private bool is_inside(Villager v) {
 		foreach(Villager ve; people) {
-			if (v is ve) return true;
+			if (v == ve) return true;
 		}
 		return false;
 	}

@@ -27,6 +27,7 @@ import polyplex.core;
 import polyplex.math;
 import polyplex.utils.logging;
 
+import wereshift.gameinfo;
 import wereshift.level;
 import wereshift.text;
 import std.conv;
@@ -59,10 +60,26 @@ public class WereshiftGame : Game {
 		current_level = new Level(this.Content);
 		current_level.Generate();
 		current_level.Init();
+		Logger.Debug("Level generated and initialized...");
 	}
 
 	public override void Update(GameTimes game_time) {
 		current_level.Update(game_time);
+		if (!(current_level is null)) {
+			if (current_level.NightEnded) {
+				// TODO: Switch gamestate.
+				destroy(current_level);
+				current_level = new Level(this.Content);
+				current_level.Generate();
+				current_level.Init();
+				Logger.Debug("Level generated and initialized...");
+
+				// Run one update.
+				current_level.Update(game_time);
+
+				GAME_INFO.Night++;
+			}
+		}
 	}
 
 	Color bg = new Color(10, 10, 12);

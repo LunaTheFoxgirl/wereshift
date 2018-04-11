@@ -84,7 +84,7 @@ public class Villager : GameObject {
 	private float speed = 3f;
 	private float panic_boost = 2f;
 
-	private float knockback_speed = 10f;
+	private float knockback_speed = 15f;
 	private float knockback_velocity = 0f;
 	private float knockback_drag = .90f;
 
@@ -468,6 +468,10 @@ public class Villager : GameObject {
 
 	public void EnterHouse() {
 		in_house = true;
+	}
+
+	public void LeaveHouse() {
+		in_house = false;
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {

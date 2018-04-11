@@ -21,14 +21,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.iovr;
+module wereshift.gameobjects.projectile;
+import wereshift.gameobjects;
+import wereshift.gameobject;
+import wereshift.animation;
+import wereshift.game;
 
-/*
-	MODULE OVERRIDES, modules will be overwritten in libpp as being in default namespace of wereshift.iovr until i fix them.
-*/
+enum ProjectileType {
+	Bullet,
+	Arrow
+}
 
-// TODO: put polyplex.core.content.contentmanager into default namespace.
-public import polyplex.core.content.contentmanager;
+public class Projectile {
+	public static Texture2D BulletTex;
+	public static Texture2D ArrowTex;
+	// TODO: Finish this.
 
-// Everything importing most should use game info.
-public import wereshift.gameinfo;
+}

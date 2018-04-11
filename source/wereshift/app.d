@@ -22,11 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.app;
+import polyplex.utils.logging;
 import polyplex.core;
 import polyplex;
 import wereshift.game;
+import wereshift.gameinfo;
 
 static void main(string[] args) {
-	BasicGameLauncher.InitSDL();
-	BasicGameLauncher.LaunchGame(new WereshiftGame(), args);
+	LogLevel |= LogType.Debug;
+	LogLevel |= LogType.Error;
+	LogLevel |= LogType.Fatal;
+	
+	GAME_INFO = new GameInfo();
+	GAME_INFO.Night = 0;
+	GAME_INFO.Souls = 0;
+	GAME_INFO.Defense = 1f;
+
+	try {
+		BasicGameLauncher.InitSDL();
+		BasicGameLauncher.LaunchGame(new WereshiftGame(), args);
+	} catch (Exception ex) {
+		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
+	} catch (Error ex) {
+		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
+	}
 }

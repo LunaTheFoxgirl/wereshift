@@ -24,6 +24,7 @@ SOFTWARE.
 module wereshift.level;
 import polyplex.core.content.gl.textures;
 import polyplex.core.content.textures;
+import polyplex.utils.logging;
 
 import wereshift.gameobjects;
 import wereshift.gameobject;
@@ -104,6 +105,35 @@ public class Level {
 	private float zoom_max = 0.8f;
 	private float zoom_iter = 0.0005f;
 
+	~this() {
+		foreach(GameObject go; Entities) {
+			destroy(go);
+			Logger.Debug("Destroyed NPC...");
+		}
+		destroy(Background);
+		Logger.Debug("Destroyed Background...");
+
+		destroy(ThePlayer);
+		Logger.Debug("Destroyed the player...");
+
+		foreach(GameObject go; Houses) {
+			destroy(go);
+			Logger.Debug("Destroyed a house...");
+		}
+
+		foreach(GameObject go; ForegroundScenery) {
+			destroy(go);
+			Logger.Debug("Destroyed a rock/bush...");
+		}
+
+		foreach(GameObject go; Scenery) {
+			destroy(go);
+			Logger.Debug("Destroyed a tree...");
+		}
+		destroy(the_ground);
+		Logger.Debug("Uprooted the ground...");
+		House.ResetHouseSpawn();
+	}
 
 	this(ContentManager manager) {
 		this.manager = manager;
@@ -127,11 +157,19 @@ public class Level {
 		text_handler = new Text(manager, "fonts/shramp_sans");
 		Camera = new Camera2D(Vector2(0, 0));
 		Camera.Zoom = 0.8f;
-		LevelSize = 90;
+		LevelSize = 160;
 		Random twn_rand = new Random();
 		town_color = Color.White;
 		town_color.Alpha = 0;
 		TownName = TOWN_PREFIXES[twn_rand.Next(0, cast(int)TOWN_PREFIXES.length)] ~ " " ~ TOWN_POSTFIXES[twn_rand.Next(0, cast(int)TOWN_POSTFIXES.length)];
+	}
+
+	public bool NightEnded() {
+		if (Background.PercentageThroughNight >= 1f) return true;
+		foreach(GameObject go; Entities) {
+			if (go.Alive) return false;
+		}
+		return true;
 	}
 
 	public void Init() {
@@ -155,16 +193,21 @@ public class Level {
 			ForegroundScenery ~= new Rock(this, Vector2(offset_rock, 0));
 			ForegroundScenery ~= new Bush(this, Vector2(offset_bush, 0));
 
+			Logger.Debug("Placed a happy little tree...");
+			Logger.Debug("Placed a happy little rock...");
+			Logger.Debug("Placed a happy little bush...");
+
 			last_rockpoint = Vector2(offset_rock, 0f);
 			last_bushpoint = Vector2(offset_rock, 0f);
 			last_treepoint = Vector2(offset, 0f);
 		}
 
-		int house_amount = r.Next(5, 12);
+		int house_amount = r.Next(10, 15);
 		foreach(i; 0 .. house_amount) {
 			House h = new House(this, Vector2(i, house_amount));
 			h.LoadContent(manager);
 			Houses ~= h;
+			Logger.Debug("Placed a happy little house...");
 		}
 
 		foreach(GameObject e; Scenery) {
@@ -181,6 +224,7 @@ public class Level {
 			if (!(e is null))
 				e.LoadContent(manager);
 		}
+		Logger.Debug("Loaded content...");
 		Background = new Backdrop(manager, this);
 		BoxTex = new GlTexture2D(new TextureImg(1, 1, [255, 255, 255, 255]));
 	}
@@ -301,6 +345,9 @@ public class Level {
 			else c = Color.Gray;
 			text_handler.DrawString(sprite_batch, "Hidden", Vector2(cast(int)WereshiftGame.Bounds.X - cast(int)ex_size.X, cast(int)WereshiftGame.Bounds.Y - cast(int)hd_size.Y), 1.5f, c, game_time, true);
 			
+			text_handler.DrawString(sprite_batch, "Night " ~ GAME_INFO.Night.text, Vector2(32, 32), 1.5f, Color.White, game_time);
+			
+
 			float shake = (1f-(ThePlayer.Health/100f))*4f;
 
 			text_handler.DrawString(sprite_batch, "HEALTH: " ~ ThePlayer.Health.text, Vector2(4, cast(int)WereshiftGame.Bounds.Y - cast(int)he_size.Y), 1.5f, Color.Red, game_time, true, shake);
