@@ -56,7 +56,7 @@ public class Backdrop {
 	}
 
 	public GameTime DawnTime() {
-		return start_time+GameTime.FromHours(4);
+		return start_time+GameTime.FromMinutes(5);
 	}
 
 	public float PercentageThroughNight() {
@@ -136,10 +136,12 @@ public class Backdrop {
 		sprite_batch.Draw(moon,
 			new Rectangle(
 				-moon.Width+cast(int)(cast(float)(WereshiftGame.Bounds.X+moon.Width)*PercentageThroughNight), 
-				cast(int)((Mathf.Sin(cast(float)(PercentageThroughNight*Mathf.PI))*((WereshiftGame.Bounds.Y/2)-(moon.Height*2))*2)+(moon.Height/2)), 
+				cast(int)(WereshiftGame.Bounds.Y/4) - cast(int)(Mathf.Sin(cast(float)(PercentageThroughNight*Mathf.PI))*WereshiftGame.Bounds.Y/4),
 				moon.Width, 
 				moon.Height),
 			new Rectangle(0, 0, moon.Width, moon.Height),
+			0f,
+			Vector2(moon.Width/2, moon.Height/2),
 			Color.White);
 
 		sprite_batch.Draw(mounts,

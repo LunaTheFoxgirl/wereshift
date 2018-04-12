@@ -332,7 +332,7 @@ public class Level {
 			Vector2 hd_size = text_handler.MeasureString("Hidden", 1.5f);
 			Vector2 he_size = text_handler.MeasureString("HEALTH: " ~ ThePlayer.Health.text, 1.5f);
 			Vector2 twn_size = text_handler.MeasureString(TownName, 2f);
-			string time = this.Background.Time.FormatTime("{0}:{1}");
+			string time = this.Background.Time.FormatTime("{1}:{2}");
 			Vector2 tm_size = text_handler.MeasureString(time, 1.5f);
 
 			sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
