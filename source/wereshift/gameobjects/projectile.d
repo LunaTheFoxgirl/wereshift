@@ -32,9 +32,59 @@ enum ProjectileType {
 	Arrow
 }
 
-public class Projectile {
+public class Projectile : GameObject {
 	public static Texture2D BulletTex;
 	public static Texture2D ArrowTex;
 	// TODO: Finish this.
 
+	private float gravity = 0.4f;
+
+	private Vector2 velocity;
+	private Vector2 position;
+	private Vector2i hits;	
+	public Rectangle Hitbox;
+
+	public ProjectileType ProjType;
+
+	this(Level level, Vector2 spawn_point, ProjectileType type, Vector2 velocity) {
+		super(level, spawn_point);
+		this.ProjType = type;
+		this.velocity = velocity;
+	}
+
+	public override void LoadContent(ContentManager manager) {
+		if (BulletTex is null) BulletTex = manager.LoadTexture("projectiles/bullet");
+		if (ArrowTex is null) ArrowTex = manager.LoadTexture("projectiles/arrow");
+
+		this.hits = Vector2i(BulletTex.Width, BulletTex.Height);
+		if (ProjType == ProjectileType.Arrow) {
+			this.hits = Vector2i(ArrowTex.Width, ArrowTex.Height);
+		}
+	}
+
+	public override void Update(GameTimes game_time) {
+		this.position += velocity;
+
+		if (ProjType == ProjectileType.Bullet) {
+			this.velocity *= 0.995f;
+		} else {
+			this.velocity *= 0.95f;
+		}
+
+		// If it's an arrow, apply gravity to it
+		if (ProjType == ProjectileType.Arrow) this.velocity += Vector2(0, gravity);
+
+		if (this.position.Y > 0) this.velocity = Vector2.Zero;
+
+		this.Hitbox = new Rectangle(cast(int)position.X, cast(int)position.Y, this.hits.X, this.hits.Y);
+	}
+
+	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		float rot = 0f;
+		if (ProjType == ProjectileType.Arrow) {
+			sprite_batch.Draw(ArrowTex, Hitbox, new Rectangle(0, 0, ArrowTex.Width, ArrowTex.Height), rot, Vector2(ArrowTex.Width/2, ArrowTex.Height/2), Color.White);
+			return;
+		}
+		sprite_batch.Draw(BulletTex, Hitbox, new Rectangle(0, 0, BulletTex.Width, BulletTex.Height), rot, Vector2(BulletTex.Width/2, BulletTex.Height/2), Color.Yellow);
+	}
 }
