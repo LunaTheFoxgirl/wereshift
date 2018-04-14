@@ -31,12 +31,6 @@ import wereshift.random;
 
 import std.stdio;
 
-public class VillagerFactory : GameObjectFactory {
-	public override GameObject Construct(Level l, Vector2 spawnpoint) {
-		return new Villager(l, spawnpoint);
-	}
-}
-
 public enum VillagerGender {
 	Male,
 	Female
@@ -66,6 +60,10 @@ public class Villager : GameObject {
 	// Looks
 	public static Texture2D VillagerMaleTex = null;
 	public static Texture2D VillagerFemaleTex = null;
+
+	public static Texture2D VillagerMaleHunterTex = null;
+	public static Texture2D VillagerMaleCrierTex = null;
+	public static Texture2D VillagerMaleGuardTex = null;
 	private static Text villager_exclaim;
 	private Color villager_draw_color;
 
@@ -101,7 +99,11 @@ public class Villager : GameObject {
 	private int decision_timer = 0;
 	private int decision_timeout = 500;
 	private float werewolf_panic_dist = 600f;
+	private bool has_been_attacked_by_wolf = false;
 	private bool has_seen_player_transform = false;
+
+	private int p_attack_timeout = 0;
+	private int p_attack_timeout_m = 150;
 
 	public Rectangle Hitbox;
 	private int health = 100;
@@ -115,7 +117,7 @@ public class Villager : GameObject {
 		return true;
 	}
 
-	this(Level parent, Vector2 spawnpoint) {
+	this(Level parent, Vector2 spawnpoint, VillagerType type) {
 		super(parent, spawnpoint);
 
 		if (rng is null) rng = new Random();
@@ -132,6 +134,7 @@ public class Villager : GameObject {
 		// TODO: Add random defense for NPC, based on their weapons, etc.
 
 		this.AIState = VillagerAIState.Idle;
+		this.AIType = type;
 	}
 
 	public bool Damage(Form player_form, float player_velocity, int damage) {
@@ -154,6 +157,9 @@ public class Villager : GameObject {
 		// Knockback harder if werewolf.
 		if (player_form == Form.Werewolf) {
 			knockback = knockback_speed*knockback_power_werewolf;
+		} else {
+			// Also if wolf, tell the villager they've been hurt by a wolf
+			has_been_attacked_by_wolf = true;
 		}
 
 		// Knockback directions.
@@ -179,7 +185,17 @@ public class Villager : GameObject {
 
 	public override void LoadContent(ContentManager content) {
 		if (VillagerMaleTex is null)
-			VillagerMaleTex = content.LoadTexture("entities/m_villager");	
+			VillagerMaleTex = content.LoadTexture("entities/m_villager");
+
+		if (VillagerMaleCrierTex is null)
+			VillagerMaleCrierTex = content.LoadTexture("entities/m_villager_crier");
+
+		if (VillagerMaleHunterTex is null)
+			VillagerMaleHunterTex = content.LoadTexture("entities/m_villager_hunter");
+
+		if (VillagerMaleGuardTex is null)
+			VillagerMaleGuardTex = content.LoadTexture("entities/m_villager_guard");
+
 		if (VillagerFemaleTex is null)
 			VillagerFemaleTex = content.LoadTexture("entities/f_villager");
 
@@ -276,7 +292,7 @@ public class Villager : GameObject {
 			// The NPC is stunned, update here instead to do some color stuff.
 			knockback_velocity = 0f;
 
-			villager_draw_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Seconds)/2)+1)*255);
+			villager_draw_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Milliseconds/64)/2)+1)*255);
 
 			stun_frame--;
 			VillagerAnimation.Update();
@@ -335,8 +351,9 @@ public class Villager : GameObject {
 	}
 
 	// HANDLE INDANGER AISTATE
+	private bool has_started_stabbing = false;
 	private void handle_npc_danger_behaviour() {
-		if (AIType == VillagerType.Citizen) {
+		if (AIType == VillagerType.Citizen || AIType == VillagerType.TownCrier) {
 			// Villager is a wimp and panicking.
 			VillagerAnimation.ChangeAnimation("light_panic", true);
 
@@ -364,8 +381,145 @@ public class Villager : GameObject {
 			}
 		} else {
 			// The villager is *not* a wimp AND WANTS TO BATTLE!
-		}
 
+			if (AIType == VillagerType.Guard) {
+				if (p_attack_timeout == 0) {
+					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 32f) {
+						VillagerAnimation.ChangeAnimation("light_walk", true);
+
+						// Run thowards from the player
+						if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
+							this.AIMoveState = VillagerAIMoveDirection.Right;
+
+						if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+							this.AIMoveState = VillagerAIMoveDirection.Left;
+						
+						// Apply move direction.
+						MoveDirection(this.AIMoveState);
+
+						// tell the player that THEY HAVE BEEN SEEN.
+						parent.ThePlayer.SeePlayer();
+
+						// Share the panic/in danger state with fellow villagers if you meet them.
+						foreach(GameObject other_villager; parent.Entities) {
+							if (other_villager != this) {
+								if ((cast(Villager)other_villager).Hitbox.Intersects(this.Hitbox)) {
+									(cast(Villager)other_villager).AIState = VillagerAIState.InDanger;
+								}
+							}
+						}
+					} else {
+						// If close enough, stab.
+						if (!has_started_stabbing) VillagerAnimation.ChangeAnimation("light_panic");
+						has_started_stabbing = true;
+						if (VillagerAnimation.IsLastFrame) {
+							parent.ThePlayer.Damage(10);
+							p_attack_timeout = p_attack_timeout_m;
+							has_started_stabbing = false;
+						}
+
+						// tell the player that THEY HAVE BEEN SEEN.
+						parent.ThePlayer.SeePlayer();
+					}
+				} else {
+					VillagerAnimation.ChangeAnimation("light_walk", true);
+
+					// Run away from the player
+					if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
+						this.AIMoveState = VillagerAIMoveDirection.Left;
+
+					if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+						this.AIMoveState = VillagerAIMoveDirection.Right;
+
+
+					// Apply move direction.
+					MoveDirection(this.AIMoveState);
+
+					// tell the player that THEY HAVE BEEN SEEN.
+					parent.ThePlayer.SeePlayer();
+					p_attack_timeout--;
+
+					// Share the panic/in danger state with fellow villagers if you meet them.
+					foreach(GameObject other_villager; parent.Entities) {
+						if (other_villager != this) {
+							if ((cast(Villager)other_villager).Hitbox.Intersects(this.Hitbox)) {
+								(cast(Villager)other_villager).AIState = VillagerAIState.InDanger;
+							}
+						}
+					}
+				}
+			} else if (AIType == VillagerType.Hunter) {
+
+
+				if (p_attack_timeout == 0) {
+					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 256f) {
+						VillagerAnimation.ChangeAnimation("light_walk", true);
+
+						// Run thowards from the player
+						if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
+							this.AIMoveState = VillagerAIMoveDirection.Right;
+
+						if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+							this.AIMoveState = VillagerAIMoveDirection.Left;
+						
+						// Apply move direction.
+						MoveDirection(this.AIMoveState);
+
+						// tell the player that THEY HAVE BEEN SEEN.
+						parent.ThePlayer.SeePlayer();
+
+						// Share the panic/in danger state with fellow villagers if you meet them.
+						foreach(GameObject other_villager; parent.Entities) {
+							if (other_villager != this) {
+								if ((cast(Villager)other_villager).Hitbox.Intersects(this.Hitbox)) {
+									(cast(Villager)other_villager).AIState = VillagerAIState.InDanger;
+								}
+							}
+						}
+					} else {
+						// If close enough, fire arrow.
+						if (!has_started_stabbing) VillagerAnimation.ChangeAnimation("light_panic");
+						has_started_stabbing = true;
+						if (VillagerAnimation.IsLastFrame) {
+							// TODO: Spawn projectile in direction of player
+							
+							//parent.ThePlayer.Damage(10);
+							p_attack_timeout = p_attack_timeout_m;
+							has_started_stabbing = false;
+						}
+
+						// tell the player that THEY HAVE BEEN SEEN.
+						parent.ThePlayer.SeePlayer();
+					}
+				} else {
+					VillagerAnimation.ChangeAnimation("light_walk", true);
+
+					// Run away from the player
+					if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
+						this.AIMoveState = VillagerAIMoveDirection.Left;
+
+					if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+						this.AIMoveState = VillagerAIMoveDirection.Right;
+
+
+					// Apply move direction.
+					MoveDirection(this.AIMoveState);
+
+					// tell the player that THEY HAVE BEEN SEEN.
+					parent.ThePlayer.SeePlayer();
+					p_attack_timeout--;
+
+					// Share the panic/in danger state with fellow villagers if you meet them.
+					foreach(GameObject other_villager; parent.Entities) {
+						if (other_villager != this) {
+							if ((cast(Villager)other_villager).Hitbox.Intersects(this.Hitbox)) {
+								(cast(Villager)other_villager).AIState = VillagerAIState.InDanger;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// HANDLE KNOCKBACK BEHAVIOUR
@@ -413,6 +567,7 @@ public class Villager : GameObject {
 				if (same_direction_as(parent.ThePlayer.Hitbox.Center)) {
 					decision_timer = 0;
 					this.AIState = VillagerAIState.Suspicious;
+					if (has_been_attacked_by_wolf || has_seen_player_transform) this.AIState = VillagerAIState.InDanger;
 				}
 			}
 		}
@@ -486,18 +641,39 @@ public class Villager : GameObject {
 			villager_exclaim.DrawString(sprite_batch, "?", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Yellow);
 		}
 
-		if (Gender == VillagerGender.Female) 
-			sprite_batch.Draw(VillagerFemaleTex, 
-				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
-				new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
-				villager_draw_color,
-				flip);
+		if (AIType == VillagerType.Citizen) {
+			if (Gender == VillagerGender.Female) 
+				sprite_batch.Draw(VillagerFemaleTex, 
+					new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+					new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+					villager_draw_color,
+					flip);
 
-		if (Gender == VillagerGender.Male) 
-			sprite_batch.Draw(VillagerMaleTex,
-				new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
-				new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
-				villager_draw_color,
-				flip);
+			if (Gender == VillagerGender.Male) 
+				sprite_batch.Draw(VillagerMaleTex,
+					new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+					new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+					villager_draw_color,
+					flip);
+		} else {
+			if (AIType == VillagerType.TownCrier)
+				sprite_batch.Draw(VillagerMaleCrierTex,
+					new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+					new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+					villager_draw_color,
+					flip);
+			if (AIType == VillagerType.Hunter)
+				sprite_batch.Draw(VillagerMaleHunterTex,
+					new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+					new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+					villager_draw_color,
+					flip);
+			if (AIType == VillagerType.Guard)
+				sprite_batch.Draw(VillagerMaleGuardTex,
+						new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+						new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+						villager_draw_color,
+						flip);
+		}
 	}
 }

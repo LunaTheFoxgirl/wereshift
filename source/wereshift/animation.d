@@ -60,6 +60,11 @@ public class Animation {
 		if (!seamless) this.frame = Animations[animation_name][0].Frame;
 	}
 
+	public bool IsLastFrame() {
+		if ((frame)%Animations[animation_name].length == Animations[animation_name].length-1) return true;
+		return false;
+	}
+
 	public int GetAnimationX(int offset = 0) {
 		return Animations[animation_name][(frame+offset)%Animations[animation_name].length].Frame;
 	}

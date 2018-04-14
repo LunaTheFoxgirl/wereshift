@@ -93,7 +93,7 @@ public class House : GameObject {
 
 		// Spawn villagers at house
 		foreach(i; 0 .. rng.Next(1, 3)) {
-			parent.Entities ~= new Villager(parent, Vector2(rng.Next(this.Hitbox.X, this.Hitbox.X+this.Hitbox.Width), 0));
+			parent.Entities ~= new Villager(parent, Vector2(rng.Next(this.Hitbox.X, this.Hitbox.X+this.Hitbox.Width), 0), VillagerType.Guard);
 		}
 	}
 

@@ -47,6 +47,7 @@ public class Player : GameObject {
 	private Texture2D player_tex;
 	private Animation player_anim;
 	private SpriteFlip flip = SpriteFlip.None;
+	private Color player_color = Color.White;
 
 	// Movement
 	private bool is_crouching = false;
@@ -78,6 +79,14 @@ public class Player : GameObject {
 	private int watchers = 0;
 	private int shaders = 0;
 
+	private int stun_frame = 0;
+	private int stun_frames = 100;
+
+	public bool StunFrames() {
+		if (stun_frame != 0) return true;
+		return false;
+	}
+
 	public void SeePlayer() {
 		watchers++;
 		HiddenState = HideState.Exposed;
@@ -101,7 +110,9 @@ public class Player : GameObject {
 	}
 
 	public void Damage(int amount) {
+		if (stun_frame != 0) return;
 		health -= amount/defense;
+		stun_frame = stun_frames;
 	}
 
 	public void KillSucceeded() {
@@ -218,6 +229,13 @@ public class Player : GameObject {
 	private MouseState state_m;
 	private KeyboardState state_k;
 	public override void Update(GameTimes game_time) {
+
+		player_color.Alpha = 255;
+		if (stun_frame > 0) {
+			player_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Milliseconds/64)/2)+1)*255);
+			stun_frame--;
+		}
+
 		state_k = Keyboard.GetState();
 		state_m = Mouse.GetState();
 		if (last_state_k is null) last_state_k = state_k;
@@ -464,6 +482,6 @@ public class Player : GameObject {
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		sprite_batch.Draw(player_tex, new Rectangle(cast(int)Position.X, cast(int)Position.Y, player_tex.Width/8, player_tex.Height/8), new Rectangle(player_anim.GetAnimationX()*(player_tex.Width/8), player_anim.GetAnimationY()*(player_tex.Height/8), player_tex.Width/8, player_tex.Height/8), Color.White, flip);
+		sprite_batch.Draw(player_tex, new Rectangle(cast(int)Position.X, cast(int)Position.Y, player_tex.Width/8, player_tex.Height/8), new Rectangle(player_anim.GetAnimationX()*(player_tex.Width/8), player_anim.GetAnimationY()*(player_tex.Height/8), player_tex.Width/8, player_tex.Height/8), player_color, flip);
 	}
 }
