@@ -277,10 +277,18 @@ public class Player : GameObject {
 		if (CurrentForm == Form.Wolf) final_speed += wolf_boost;
 
 		is_crouching = false;
+		if (is_hiding && state_k.IsKeyDown(Keys.Space)) {
+			this.is_hiding = false;
+		}
 		if (is_grounded && state_k.IsKeyDown(Keys.Down)) {
 			is_crouching = true;
+			if (hiders > 0) {
+				this.is_hiding = true;
+			}
 			if (allow_transform) transform_counter++;
 		}
+
+		if (is_hiding) return;
 
 		// Only wolf and werewolf can jump!
 		if (is_grounded && CurrentForm != Form.Human && last_state_k.IsKeyUp(Keys.Space) && state_k.IsKeyDown(Keys.Space)) {

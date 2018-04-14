@@ -112,7 +112,10 @@ public class Villager : GameObject {
 	private bool in_house = false;
 
 	private int suspic_timer = 0;
-	private int suspic_timeout = 50;
+	private int suspic_timeout = 80;
+
+	private int player_forget_timer = 0;
+	private int player_forget_timeout = 100;
 
 	public bool CanEnterHouse() {
 		if (knockback_velocity != 0) return false;
@@ -391,7 +394,7 @@ public class Villager : GameObject {
 
 			if (AIType == VillagerType.Guard) {
 				if (p_attack_timeout == 0) {
-					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 32f) {
+					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 64f) {
 						VillagerAnimation.ChangeAnimation("light_walk", true);
 
 						// Run thowards from the player
@@ -420,7 +423,7 @@ public class Villager : GameObject {
 						if (!has_started_stabbing) VillagerAnimation.ChangeAnimation("light_panic");
 						has_started_stabbing = true;
 						if (VillagerAnimation.IsLastFrame) {
-							parent.ThePlayer.Damage(10);
+							parent.ThePlayer.Damage(25);
 							p_attack_timeout = p_attack_timeout_m;
 							has_started_stabbing = false;
 						}
@@ -574,6 +577,7 @@ public class Villager : GameObject {
 					this.AIState = VillagerAIState.InDanger;
 				}
 			}
+			this.player_forget_timer = 0;
 		}
 
 		if (this.Position.Distance(parent.ThePlayer.Position) < werewolf_panic_dist/2) {
@@ -585,14 +589,29 @@ public class Villager : GameObject {
 					if (has_been_attacked_by_wolf || has_seen_player_transform) this.AIState = VillagerAIState.InDanger;
 				}
 			}
+			this.player_forget_timer = 0;
+		} else {
+			if (this.suspic_timer > 0) this.suspic_timer--;
+			this.player_forget_timer++;
+			if (this.player_forget_timer >= this.player_forget_timeout) {
+				this.AIState = VillagerAIState.Moving;
+				// Run away from the player
+				if (parent.ThePlayer.Hitbox.Center.X > this.Hitbox.Center.X)
+					this.AIMoveState = VillagerAIMoveDirection.Left;
+
+				if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X)
+					this.AIMoveState = VillagerAIMoveDirection.Right;
+			}
 		}
 
-		if (this.AIState == VillagerAIState.InDanger) {
+		if (this.AIState == VillagerAIState.InDanger && !parent.ThePlayer.IsPlayerHidden) {
 			handle_npc_danger_behaviour();
+			return;
 		}
 
 		if (this.AIState == VillagerAIState.Suspicious) {
 			handle_npc_suspic_behaviour();
+			return;
 		}
 	}
 
@@ -688,10 +707,10 @@ public class Villager : GameObject {
 					flip);
 			if (AIType == VillagerType.Guard)
 				sprite_batch.Draw(VillagerMaleGuardTex,
-						new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
-						new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
-						villager_draw_color,
-						flip);
+					new Rectangle(cast(int)Position.X, cast(int)Position.Y, render_bounds.X, render_bounds.Y),
+					new Rectangle(VillagerAnimation.GetAnimationX() * render_bounds.X, VillagerAnimation.GetAnimationY() * render_bounds.Y, render_bounds.X, render_bounds.Y),
+					villager_draw_color,
+					flip);
 		}
 	}
 }

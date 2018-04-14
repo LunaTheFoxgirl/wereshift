@@ -56,7 +56,7 @@ public class Backdrop {
 	}
 
 	public GameTime DawnTime() {
-		return start_time+GameTime.FromMinutes(5);
+		return Time()+GameTime.FromMinutes(5);
 	}
 
 	public float PercentageThroughNight() {
@@ -105,9 +105,10 @@ public class Backdrop {
 	}
 
 	public void Update(GameTimes game_time) {
-		if (start_time is null) start_time = new GameTime(game_time.TotalTime.BaseValue);
 		current_time = game_time.TotalTime;
-		//writeln(PercentageThroughNight, " ", Time.ToString, " ", DawnTime.ToString);
+		if (start_time is null) {
+			start_time = new GameTime(game_time.TotalTime.BaseValue);
+		}
 		star_animation.Update();
 	}
 

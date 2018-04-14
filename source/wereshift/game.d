@@ -65,23 +65,40 @@ public class WereshiftGame : Game {
 		Logger.Debug("Level generated and initialized...");
 	}
 
+	KeyboardState stat;
 	public override void Update(GameTimes game_time) {
-		current_level.Update(game_time);
+		KeyboardState now_stat = Keyboard.GetState();
+		if (stat is null) stat = now_stat;
+
 		if (!(current_level is null)) {
+			current_level.Update(game_time);
+
 			if (current_level.NightEnded) {
-				// TODO: Switch gamestate.
-				destroy(current_level);
-				current_level = new Level(this.Content);
-				current_level.Generate();
-				current_level.Init();
-				Logger.Debug("Level generated and initialized...");
-
-				// Run one update.
-				current_level.Update(game_time);
-
-				GAME_INFO.Night++;
+				NextNight(game_time);
+			}
+			if (now_stat.IsKeyDown(Keys.Q) && stat.IsKeyUp(Keys.Q)) {
+				NextNight(game_time);
 			}
 		}
+
+		if (now_stat.IsKeyDown(Keys.Escape)) {
+			this.Quit();
+		}
+		stat = now_stat;
+	}
+
+	public void NextNight(GameTimes game_time) {
+		// TODO: Switch gamestate.
+		destroy(current_level);
+		current_level = new Level(this.Content);
+		current_level.Generate();
+		current_level.Init();
+		Logger.Debug("Level generated and initialized...");
+
+		// Run one update.
+		current_level.Update(game_time);
+
+		GAME_INFO.Night++;
 	}
 
 	Color bg = new Color(10, 10, 12);
