@@ -265,7 +265,7 @@ public class Villager : GameObject {
 
 	public override void Update(GameTimes game_time) {
 		if (in_house) return;
-		this.Hitbox = new Rectangle(cast(int)this.Position.X, cast(int)this.Position.Y, cast(int)render_bounds.X, cast(int)render_bounds.Y);
+		this.Hitbox = new Rectangle(cast(int)this.Position.X+140, cast(int)this.Position.Y, 40, cast(int)render_bounds.Y);
 
 		if (health <= 0) {
 			// The NPC dead, remove from memory asap.
@@ -452,7 +452,7 @@ public class Villager : GameObject {
 
 
 				if (p_attack_timeout == 0) {
-					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 256f) {
+					if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) > 512f) {
 						VillagerAnimation.ChangeAnimation("light_walk", true);
 
 						// Run thowards from the player
@@ -482,9 +482,18 @@ public class Villager : GameObject {
 						has_started_stabbing = true;
 						if (VillagerAnimation.IsLastFrame) {
 							// TODO: Spawn projectile in direction of player
+							Vector2 vel = (this.Hitbox.Center+parent.ThePlayer.Hitbox.Center);
+							vel = Vector2(vel.X, -(rng.Next(512, 2048)));
+							vel = vel.Normalize*10;
+
+							if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X) vel.X = -vel.X;
+
+							Projectile p = new Projectile(parent, this.Hitbox.Center, ProjectileType.Arrow, vel*2);
+							p.LoadContent(parent.Content);
+							parent.Projectiles ~= p;
 							
 							//parent.ThePlayer.Damage(10);
-							p_attack_timeout = p_attack_timeout_m;
+							p_attack_timeout = p_attack_timeout_m/2;
 							has_started_stabbing = false;
 						}
 
@@ -631,6 +640,7 @@ public class Villager : GameObject {
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		if (in_house) return;
+		sprite_batch.Draw(parent.BoxTex, Hitbox, new Rectangle(0, 0, 1, 1), Color.Yellow, flip);
 
 		if (has_seen_player_transform) {
 			Vector2 mes = villager_exclaim.MeasureString("!", 2f);

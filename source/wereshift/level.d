@@ -79,9 +79,10 @@ const string[] TOWN_POSTFIXES = [
 
 public class Level {
 	public Player ThePlayer;
-	public GameObject[] Entities = [];
-	public GameObject[] Scenery = [];
-	public GameObject[] Houses = [];
+	public Projectile[] Projectiles = [];
+	public Villager[] Entities = [];
+	public Tree[] Scenery = [];
+	public House[] Houses = [];
 	public GameObject[] ForegroundScenery = [];
 	public Camera2D Camera;
 	public Text text_handler;
@@ -95,7 +96,7 @@ public class Level {
 		return the_ground.GroundTexture.Width * LevelSize;
 	}
 
-	private ContentManager manager;
+	public ContentManager Content;
 	private Ground the_ground;
 
 	// Zoom
@@ -135,8 +136,8 @@ public class Level {
 		House.ResetHouseSpawn();
 	}
 
-	this(ContentManager manager) {
-		this.manager = manager;
+	this(ContentManager content) {
+		this.Content = content;
 	}
 
 	public void ZoomOutCamera() {
@@ -154,7 +155,7 @@ public class Level {
 	public void Generate() {
 		ThePlayer = new Player(this);
 		the_ground = new Ground(this);
-		text_handler = new Text(manager, "fonts/shramp_sans");
+		text_handler = new Text(Content, "fonts/shramp_sans");
 		Camera = new Camera2D(Vector2(0, 0));
 		Camera.Zoom = 0.8f;
 		LevelSize = 160;
@@ -173,8 +174,8 @@ public class Level {
 	}
 
 	public void Init() {
-		ThePlayer.LoadContent(manager);
-		the_ground.LoadContent(manager);
+		ThePlayer.LoadContent(Content);
+		the_ground.LoadContent(Content);
 
 		Random r = new Random();
 
@@ -205,27 +206,39 @@ public class Level {
 		int house_amount = r.Next(10, 15);
 		foreach(i; 0 .. house_amount) {
 			House h = new House(this, Vector2(i, house_amount));
-			h.LoadContent(manager);
+			h.LoadContent(Content);
 			Houses ~= h;
 			Logger.Debug("Placed a happy little house...");
 		}
 
+		foreach(i; 0 .. r.Next(10, 15)) {
+			Villager v = new Villager(this, Vector2(r.Next(cast(int)House.TownSize.X, cast(int)House.TownSize.Y), 0), VillagerType.Guard);
+			Entities ~= v;
+			Logger.Debug("Placed a happy little guard...");
+		}
+
+		foreach(i; 0 .. r.Next(10, 15)) {
+			Villager v = new Villager(this, Vector2(r.Next(512, cast(int)House.TownSize.X), 0), VillagerType.Hunter);
+			Entities ~= v;
+			Logger.Debug("Placed a happy little hunter...");
+		}
+
 		foreach(GameObject e; Scenery) {
 			if (!(e is null))
-				e.LoadContent(manager);
+				e.LoadContent(Content);
 		}
 
 		foreach(GameObject e; Entities) {
 			if (!(e is null))
-				e.LoadContent(manager);
+				e.LoadContent(Content);
 		}
 
 		foreach(GameObject e; ForegroundScenery) {
 			if (!(e is null))
-				e.LoadContent(manager);
+				e.LoadContent(Content);
 		}
 		Logger.Debug("Loaded content...");
-		Background = new Backdrop(manager, this);
+		Background = new Backdrop(Content, this);
 		BoxTex = new GlTexture2D(new TextureImg(1, 1, [255, 255, 255, 255]));
 	}
 
@@ -276,6 +289,33 @@ public class Level {
 			dead_color.Alpha = dead_color.Alpha + 2;
 		}
 
+		foreach (Projectile p; Projectiles) {
+			p.Update(game_time);
+		}
+
+		size_t newlen = Projectiles.length;
+		foreach(i; 0 .. Projectiles.length) {
+			if (Projectiles[i].Spent) {
+				Projectiles[i] = null;
+				newlen--;
+			}
+		}
+		if (newlen != Projectiles.length) {
+			foreach(i; 0 .. Projectiles.length) {
+				if (i+1 > Projectiles.length) break; 
+				if (Projectiles[i] is null) {
+					foreach(x; i+1 .. Projectiles.length) {
+						if (Projectiles[x] is null) continue;
+						Projectiles[i] = Projectiles[x];
+						Projectiles[x] = null;
+						break;
+					}
+				}
+			}
+		}
+
+		Projectiles.length = newlen;
+
 		handle_zoom();
 		Background.Update(game_time);
 	}
@@ -299,6 +339,10 @@ public class Level {
 		foreach(GameObject e; Houses) {
 			if (!(e is null))
 				e.Draw(game_time, sprite_batch);
+		}
+
+		foreach (Projectile p; Projectiles) {
+			p.Draw(game_time, sprite_batch);
 		}
 
 		foreach(GameObject e; Entities) {

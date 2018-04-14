@@ -30,6 +30,8 @@ import wereshift.random;
 import std.stdio;
 
 public class House : GameObject {
+	public static Vector2 TownSize = Vector2.Zero;
+
 	// Looks
 	public static Texture2D HouseTexture;
 	public static Vector2 TextureSplit = Vector2(2, 3);
@@ -72,13 +74,18 @@ public class House : GameObject {
 		float offset = rng.Next(16, 64);
 
 		// If this is the first house in the town, place it in the middle of the map with some offset to make the town largely be in the middle.
-		if (last_house_pos == 0) last_house_pos = (((parent.LevelSizePX/2)-(TextureSplitted.X*((this.spawn_point.Y/2))))+(this.spawn_point.X*TextureSplitted.X));
+		if (last_house_pos == 0) {
+			last_house_pos = (((parent.LevelSizePX/2)-(TextureSplitted.X*((this.spawn_point.Y/2))))+(this.spawn_point.X*TextureSplitted.X));
+			TownSize = Vector2(last_house_pos, 0f);
+		}
 
 		// Set the spawn point of the house.
 		this.spawn_point = Vector2(last_house_pos+(offset*10), 0);
 
 		// Iterate the house position, so that the offset is only applied relatively to the house before this one.
 		last_house_pos = (TextureSplitted.X)+last_house_pos+(offset*10);
+
+		TownSize = Vector2(TownSize.X, (TextureSplitted.X)+last_house_pos+(offset*10));
 
 		// Set the position of the hitbox (for player shade levels)
 		this.Hitbox = new Rectangle(cast(int)(this.spawn_point.X+(TextureSplitted.X/4)), cast(int)this.spawn_point.Y, cast(int)(TextureSplitted.X/4)*2, cast(int)TextureSplitted.X);
@@ -93,7 +100,7 @@ public class House : GameObject {
 
 		// Spawn villagers at house
 		foreach(i; 0 .. rng.Next(1, 3)) {
-			parent.Entities ~= new Villager(parent, Vector2(rng.Next(this.Hitbox.X, this.Hitbox.X+this.Hitbox.Width), 0), VillagerType.Guard);
+			parent.Entities ~= new Villager(parent, Vector2(rng.Next(this.Hitbox.X, this.Hitbox.X+this.Hitbox.Width), 0), VillagerType.Citizen);
 		}
 	}
 
@@ -127,6 +134,7 @@ public class House : GameObject {
 				
 				if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) < 2000f) {
 					people_timer[i] = 0;
+					handle_pewpew();
 				}
 				people_timer[i]++;
 				if (people_timer[i] >= people_timeout) {
@@ -141,6 +149,16 @@ public class House : GameObject {
 		if (is_empty()) {
 			tex_offset.X = 0;
 		}
+	}
+
+	private void handle_pewpew() {
+		Vector2 vel = (this.Hitbox.Center+parent.ThePlayer.Hitbox.Center).Normalize*10;
+
+		if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X) vel = -vel;
+
+		Projectile p = new Projectile(parent, this.Hitbox.Center, ProjectileType.Arrow, vel*32);
+		p.LoadContent(parent.Content);
+		parent.Projectiles ~= p;
 	}
 
 	private void insert_free(Villager v) {

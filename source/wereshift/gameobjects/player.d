@@ -235,7 +235,7 @@ public class Player : GameObject {
 			player_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Milliseconds/64)/2)+1)*255);
 			stun_frame--;
 		}
-
+		
 		state_k = Keyboard.GetState();
 		state_m = Mouse.GetState();
 		if (last_state_k is null) last_state_k = state_k;
@@ -343,18 +343,21 @@ public class Player : GameObject {
 		this.Position += Vector2(0, -y_velocity);
 
 		Hitbox = new Rectangle(cast(int)Position.X+80, cast(int)Position.Y, 64, player_tex.Height/8);
+		if (this.CurrentForm == Form.Wolf) {
+			Hitbox = new Rectangle(cast(int)Position.X+((player_tex.Width/8)/4), cast(int)Position.Y+(player_tex.Height/8)-((player_tex.Width/8)/4), ((player_tex.Width/8)/4)*2, (player_tex.Height/8)/4);
+		}
 
 		// Handle gravity.
 		y_velocity -= Gravity;
 
 		// Make sure player doesn't fall through the ground.
-		if (this.Position.Y + Hitbox.Height > 0) {
+		if (this.Hitbox.Bottom > 0) {
 			y_velocity = 0;
 			is_grounded = true;
-			this.Position = Vector2(this.Position.X, -Hitbox.Height);
+			this.Position = Vector2(this.Position.X, -(player_tex.Width/8));
 		}
 
-		if (Position.Y+this.Hitbox.Height < 0) is_grounded = false;
+		if (this.Hitbox.Bottom < 0) is_grounded = false;
 		else {
 			is_grounded = true;
 		}
@@ -482,6 +485,7 @@ public class Player : GameObject {
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		//sprite_batch.Draw(parent.BoxTex, Hitbox, new Rectangle(0, 0, 1, 1), Color.Red, flip);
 		sprite_batch.Draw(player_tex, new Rectangle(cast(int)Position.X, cast(int)Position.Y, player_tex.Width/8, player_tex.Height/8), new Rectangle(player_anim.GetAnimationX()*(player_tex.Width/8), player_anim.GetAnimationY()*(player_tex.Height/8), player_tex.Width/8, player_tex.Height/8), player_color, flip);
 	}
 }

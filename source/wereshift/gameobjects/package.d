@@ -30,3 +30,4 @@ public import wereshift.gameobjects.house;
 public import wereshift.gameobjects.tree;
 public import wereshift.gameobjects.rock;
 public import wereshift.gameobjects.bush;
+public import wereshift.gameobjects.projectile;
