@@ -55,7 +55,7 @@ public class Tree : GameObject {
 
 	public override void Update(GameTimes game_time) {
 		if (parent.ThePlayer.Hitbox.Intersects(this.Hitbox)) {
-			parent.ThePlayer.Shade();
+			//parent.ThePlayer.Shade();
 		}
 	}
 

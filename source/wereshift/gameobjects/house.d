@@ -50,6 +50,9 @@ public class House : GameObject {
 	private int[2] people_timer = [0, 0];
 	private int people_timeout = 200;
 
+	private int arrow_timer = 0;
+	private int arrow_timeout = 100;
+
 	private Vector2 tex_offset = Vector2(0, 0);
 
 	public Vector2 SpawnPoint() {
@@ -88,7 +91,7 @@ public class House : GameObject {
 		TownSize = Vector2(TownSize.X, (TextureSplitted.X)+last_house_pos+(offset*10));
 
 		// Set the position of the hitbox (for player shade levels)
-		this.Hitbox = new Rectangle(cast(int)(this.spawn_point.X+(TextureSplitted.X/4)), cast(int)this.spawn_point.Y, cast(int)(TextureSplitted.X/4)*2, cast(int)TextureSplitted.X);
+		this.Hitbox = new Rectangle(cast(int)(this.spawn_point.X+(TextureSplitted.X/4)), cast(int)this.spawn_point.Y-cast(int)TextureSplitted.Y, cast(int)(TextureSplitted.X/4)*2, cast(int)TextureSplitted.Y);
 
 		if (tex_offset.Y == 0) {
 			this.HitboxDoor = new Rectangle(cast(int)this.spawn_point.X+910, cast(int)this.spawn_point.Y, 70, cast(int)TextureSplitted.X);
@@ -129,12 +132,13 @@ public class House : GameObject {
 		}
 
 		if (!is_empty()) {
+			handle_pewpew();
+
 			foreach(i; 0 .. people.length) {
 				if (people[i] is null) continue;
 				
 				if (this.Hitbox.Center.Distance(parent.ThePlayer.Hitbox.Center) < 2000f) {
 					people_timer[i] = 0;
-					handle_pewpew();
 				}
 				people_timer[i]++;
 				if (people_timer[i] >= people_timeout) {
@@ -148,17 +152,28 @@ public class House : GameObject {
 
 		if (is_empty()) {
 			tex_offset.X = 0;
+			arrow_timer = 0;
 		}
 	}
 
 	private void handle_pewpew() {
-		Vector2 vel = (this.Hitbox.Center+parent.ThePlayer.Hitbox.Center).Normalize*10;
 
-		if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X) vel = -vel;
+		if (arrow_timer == 0) {
+			// TODO: Spawn projectile in direction of player
+			Vector2 vel = (this.Hitbox.Center+parent.ThePlayer.Hitbox.Center);
+			vel = Vector2(vel.X, -(rng.Next(cast(int)this.Hitbox.Center.Y, cast(int)this.Hitbox.Center.Y+2048)));
+			vel = vel.Normalize*10;
 
-		Projectile p = new Projectile(parent, this.Hitbox.Center, ProjectileType.Arrow, vel*32);
-		p.LoadContent(parent.Content);
-		parent.Projectiles ~= p;
+			if (parent.ThePlayer.Hitbox.Center.X < this.Hitbox.Center.X) vel.X = -vel.X;
+
+			Vector2 pos = this.Hitbox.Center;
+			pos.Y = this.Hitbox.Center.Y + (this.Hitbox.Height/4);
+			Projectile p = new Projectile(parent, pos, ProjectileType.Arrow, vel*6);
+			p.LoadContent(parent.Content);
+			parent.Projectiles ~= p;
+			arrow_timer = arrow_timeout/in_house;
+		}
+		arrow_timer--;
 	}
 
 	private void insert_free(Villager v) {
@@ -197,11 +212,19 @@ public class House : GameObject {
 		return false;
 	}
 
+	private int in_house() {
+		int p = 0;
+		foreach(Villager ve; people) {
+			if (!(ve is null)) p++;
+		}
+		return p;
+	}
+
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		
 		sprite_batch.Draw(HouseTexture, 
 			new Rectangle(cast(int)spawn_point.X, -cast(int)TextureSplitted.Y, cast(int)TextureSplitted.X, cast(int)TextureSplitted.Y), 
 			new Rectangle(cast(int)(tex_offset.X*TextureSplitted.X), cast(int)(tex_offset.Y*TextureSplitted.Y), cast(int)TextureSplitted.X, cast(int)TextureSplitted.Y), 
 			Color.White);
+		//sprite_batch.Draw(parent.BoxTex, Hitbox, new Rectangle(0, 0, 1, 1), Color.CornflowerBlue, SpriteFlip.None);
 	}
 }

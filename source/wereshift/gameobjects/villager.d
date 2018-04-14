@@ -103,13 +103,16 @@ public class Villager : GameObject {
 	private bool has_seen_player_transform = false;
 
 	private int p_attack_timeout = 0;
-	private int p_attack_timeout_m = 150;
+	private int p_attack_timeout_m = 50;
 
 	public Rectangle Hitbox;
 	private int health = 100;
 	private int defense = 1;
 
 	private bool in_house = false;
+
+	private int suspic_timer = 0;
+	private int suspic_timeout = 50;
 
 	public bool CanEnterHouse() {
 		if (knockback_velocity != 0) return false;
@@ -147,6 +150,9 @@ public class Villager : GameObject {
 
 		// You can also not damage an NPC being knocked back.
 		if (knockback_velocity != 0) return false;
+
+		// Attack instantly after done blinking
+		p_attack_timeout = 0;
 
 		// Simple damage formular
 		this.health -= damage/defense;
@@ -285,23 +291,18 @@ public class Villager : GameObject {
 			return;
 		}
 
-		if (stun_frame >= 1) {
-			// NPC sprite should be "fallen"
-			VillagerAnimation.ChangeAnimation("light_idle", true);
+		// Reset the transparency of the NPC if it's not the right value.
+		if (villager_draw_color.Alpha != 255)
+			villager_draw_color.Alpha = 255;
 
+		if (stun_frame >= 1) {
 			// The NPC is stunned, update here instead to do some color stuff.
 			knockback_velocity = 0f;
 
 			villager_draw_color.Alpha = (cast(int)((Mathf.Sin(game_time.TotalTime.Milliseconds/64)/2)+1)*255);
 
 			stun_frame--;
-			VillagerAnimation.Update();
-			return;
 		}
-
-		// Reset the transparency of the NPC if it's not the right value.
-		if (villager_draw_color.Alpha != 255)
-			villager_draw_color.Alpha = 255;
 
 		// Handle NPC ticks and knockback behaviour
 		if (knockback_velocity == 0)
@@ -348,6 +349,12 @@ public class Villager : GameObject {
 	// HANDLE SUSPICIOUS AISTATE
 	private void handle_npc_suspic_behaviour() {
 		if (has_seen_player_transform) this.AIState = VillagerAIState.InDanger;
+		suspic_timer++;
+		if (suspic_timer > suspic_timeout) suspic_timer = suspic_timeout;
+		if (suspic_timer >= suspic_timeout) {
+			this.AIState = VillagerAIState.InDanger;
+			this.has_been_attacked_by_wolf = true;
+		}
 	}
 
 	// HANDLE INDANGER AISTATE
@@ -492,7 +499,6 @@ public class Villager : GameObject {
 							p.LoadContent(parent.Content);
 							parent.Projectiles ~= p;
 							
-							//parent.ThePlayer.Damage(10);
 							p_attack_timeout = p_attack_timeout_m/2;
 							has_started_stabbing = false;
 						}
@@ -638,17 +644,19 @@ public class Villager : GameObject {
 		in_house = false;
 	}
 
+	Color suspic_col = Color.Yellow;
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		if (in_house) return;
-		sprite_batch.Draw(parent.BoxTex, Hitbox, new Rectangle(0, 0, 1, 1), Color.Yellow, flip);
+		//sprite_batch.Draw(parent.BoxTex, Hitbox, new Rectangle(0, 0, 1, 1), Color.Yellow, flip);
 
-		if (has_seen_player_transform) {
-			Vector2 mes = villager_exclaim.MeasureString("!", 2f);
-			villager_exclaim.DrawString(sprite_batch, "!", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Red);
+		if (this.AIState == VillagerAIState.InDanger || has_seen_player_transform) {
+			Vector2 mes = villager_exclaim.MeasureString("!", 3f);
+			villager_exclaim.DrawString(sprite_batch, "!", Vector2(this.Hitbox.Center.X-(mes.X/2), (this.Hitbox.Y+(this.Hitbox.Height/2)) - mes.Y), 3f, Color.Red);
 		}
-		if (this.AIState == VillagerAIState.Suspicious) {
-			Vector2 mes = villager_exclaim.MeasureString("?", 2f);
-			villager_exclaim.DrawString(sprite_batch, "?", Vector2(this.Hitbox.Center.X-(mes.X/2), this.Hitbox.Y - 8 - mes.Y), 2f, Color.Yellow);
+		if (this.AIState == VillagerAIState.Suspicious || (this.AIState != VillagerAIState.InDanger && suspic_timer >= 1 && suspic_timer < suspic_timeout)) {
+			Vector2 mes = villager_exclaim.MeasureString("?", 3f);
+			suspic_col.G = cast(int)(255f*(1f-(cast(float)suspic_timer/cast(float)suspic_timeout)));
+			villager_exclaim.DrawString(sprite_batch, "?", Vector2(this.Hitbox.Center.X-(mes.X/2), (this.Hitbox.Y+(this.Hitbox.Height/2)) - mes.Y), 3f, suspic_col);
 		}
 
 		if (AIType == VillagerType.Citizen) {

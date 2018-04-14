@@ -78,6 +78,8 @@ public class Player : GameObject {
 	public LightState LightingState = LightState.InShade;
 	private int watchers = 0;
 	private int shaders = 0;
+	private int hiders = 0;
+	private bool is_hiding = false;
 
 	private int stun_frame = 0;
 	private int stun_frames = 100;
@@ -98,6 +100,15 @@ public class Player : GameObject {
 
 	public void Shade() {
 		shaders++;
+	}
+
+	public void HidePlayer() {
+		hiders++;
+	}
+
+
+	public bool IsPlayerHidden() {
+		return is_hiding;
 	}
 
 	//Health
@@ -477,6 +488,7 @@ public class Player : GameObject {
 		if (this.watchers > 0) parent.ZoomOutCamera();
 		else parent.ZoomInCamera();
 		this.watchers = 0;
+		this.hiders = 0;
 		HiddenState = HideState.Hidden;
 	}
 

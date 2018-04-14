@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.game;
+import wereshift.screens;
 import polyplex.core.render.gl.shader;
 import polyplex.core;
 import polyplex.math;
 import polyplex.utils.logging;
 
 import wereshift.gameinfo;
-import wereshift.level;
+import wereshift.screen;
 import wereshift.text;
 import std.conv;
 import std.stdio;
@@ -36,6 +37,7 @@ import std.stdio;
 public class WereshiftGame : Game {
 
 	private Level current_level;
+	private ScoreScreen score_screen;
 	private static WereshiftGame this_game;
 	private Text f;
 

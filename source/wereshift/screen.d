@@ -21,29 +21,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.app;
-import polyplex.utils.logging;
-import polyplex.core;
-import polyplex;
-import polyplex.math;
-import wereshift.game;
-import wereshift.gameinfo;
+module wereshift.screen;
+public import polyplex.core.content.gl.textures;
+public import polyplex.core.content.textures;
+public import polyplex.utils.logging;
+public import polyplex.core;
+public import polyplex.math;
 
-static void main(string[] args) {
-	LogLevel |= LogType.Debug;
-	LogLevel |= LogType.Error;
-	LogLevel |= LogType.Fatal;
-	
-	GAME_INFO = new GameInfo();
-	GAME_INFO.Night = 0;
-	GAME_INFO.Souls = 0;
-	GAME_INFO.Defense = 1f;
-	try {
-		BasicGameLauncher.InitSDL();
-		BasicGameLauncher.LaunchGame(new WereshiftGame(), args);
-	} catch (Exception ex) {
-		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
-	} catch (Error ex) {
-		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
+public class Screen {
+	public ContentManager Content;
+
+	this(ContentManager content) {
+		this.Content = content;
 	}
+
+	public abstract void Init();
+	public abstract void Update(GameTimes game_time);
+	public abstract void Draw(GameTimes game_time, SpriteBatch sprite_batch);
 }

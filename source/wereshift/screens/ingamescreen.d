@@ -21,11 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.level;
+module wereshift.screens.ingamescreen;
 import polyplex.core.content.gl.textures;
 import polyplex.core.content.textures;
 import polyplex.utils.logging;
 
+import wereshift.screen;
 import wereshift.gameobjects;
 import wereshift.gameobject;
 import wereshift.backdrop;
@@ -77,7 +78,7 @@ const string[] TOWN_POSTFIXES = [
 	"Hills"
 ];
 
-public class Level {
+public class Level : Screen {
 	public Player ThePlayer;
 	public Projectile[] Projectiles = [];
 	public Villager[] Entities = [];
@@ -96,7 +97,6 @@ public class Level {
 		return the_ground.GroundTexture.Width * LevelSize;
 	}
 
-	public ContentManager Content;
 	private Ground the_ground;
 
 	// Zoom
@@ -137,7 +137,7 @@ public class Level {
 	}
 
 	this(ContentManager content) {
-		this.Content = content;
+		super(content);
 	}
 
 	public void ZoomOutCamera() {
@@ -173,7 +173,7 @@ public class Level {
 		return true;
 	}
 
-	public void Init() {
+	public override void Init() {
 		ThePlayer.LoadContent(Content);
 		the_ground.LoadContent(Content);
 
@@ -253,7 +253,7 @@ public class Level {
 		Camera.Zoom = zoom_value;
 	}
 
-	public void Update(GameTimes game_time) {
+	public override void Update(GameTimes game_time) {
 		ThePlayer.Update(game_time);
 		foreach(GameObject e; Entities) {
 			if (!(e is null))
@@ -324,7 +324,7 @@ public class Level {
 
 	private Color town_color;
 	private Color dead_color = new Color(255, 0, 0, 0);
-	public void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.LinearWrap, null, null);
 		Background.Draw(game_time, sprite_batch);
 		sprite_batch.End();

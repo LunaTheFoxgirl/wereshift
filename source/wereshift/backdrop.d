@@ -22,10 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 module wereshift.backdrop;
+import wereshift.screens;
 import wereshift.gameobjects;
 import wereshift.gameobject;
 import wereshift.animation;
-import wereshift.level;
 import wereshift.iovr;
 import wereshift.game;
 import wereshift.text;
