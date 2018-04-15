@@ -79,6 +79,9 @@ const string[] TOWN_POSTFIXES = [
 ];
 
 public class Level : Screen {
+	alias lcallback = void delegate();
+
+	private static bool has_destroyed = false;
 	public Player ThePlayer;
 	public Projectile[] Projectiles = [];
 	public Villager[] Entities = [];
@@ -90,6 +93,13 @@ public class Level : Screen {
 	public int LevelSize;
 	public string TownName = "Unnamed Town";
 	public Backdrop Background;
+
+	private lcallback pcallback;
+
+	public void SetCallback(lcallback pcallback) {
+		has_destroyed = false;
+		this.pcallback = pcallback;
+	}
 
 	public static Texture2D BoxTex;
 
@@ -134,6 +144,8 @@ public class Level : Screen {
 		destroy(the_ground);
 		Logger.Debug("Uprooted the ground...");
 		House.ResetHouseSpawn();
+		Logger.Debug("World destroyed.");
+		destroy(this.pcallback);
 	}
 
 	this(ContentManager content) {
@@ -318,6 +330,10 @@ public class Level : Screen {
 
 		handle_zoom();
 		Background.Update(game_time);
+		if (dead_color.Alpha >= 255) {
+			dead_color.Alpha = 0;
+			pcallback();
+		}
 	}
 
 	private bool town_name_in = false;

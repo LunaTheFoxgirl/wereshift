@@ -24,4 +24,6 @@ SOFTWARE.
 module wereshift.screens;
 
 public import wereshift.screens.ingamescreen;
+public import wereshift.screens.startscreen;
 public import wereshift.screens.scorescreen;
+public import wereshift.screens.splashscreen;

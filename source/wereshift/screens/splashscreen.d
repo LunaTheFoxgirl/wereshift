@@ -21,56 +21,66 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.screens.scorescreen;
+module wereshift.screens.splashscreen;
 import wereshift.screen;
 import wereshift.ui;
 import wereshift.game;
-import std.conv;
+
 import std.stdio;
 
-public class ScoreScreen : Screen {
-	UILabel you_died;
-	UILabel text;
-	UIButton menu;
+public class SplashScreen : Screen {
+	private alias acallback = void delegate(GameState state);
+	private UIImage img;
+	private acallback callback;
 
-	public void SetCallback(UIButton.ButtonCallback callback) {
-		this.menu.SetCallback(callback);
+	public void SetCallback(acallback callback) {
+		this.callback = callback;
 	}
 
 	this(ContentManager content) {
 		super(content);
+		Init();
 	}
 
 	public override void Init() {
-		this.you_died = new UILabel(new Rectangle(0, 0, 0, 0), null, "YOU DIED", 1f, Color.Transparent, Color.Red);
-		this.text = new UILabel(new Rectangle(0, 0, 0, 0), null, 
-		"You survived " ~ GAME_INFO.Night.text ~ " nights!\n" ~
-		"You killed " ~ GAME_INFO.Souls.text ~ " villagers!\n" ~
-		"You have taken " ~ GAME_INFO.DamageTaken.text ~ " of total damage from enemies!\n\n" ~
-		"Total Score: " ~ GAME_INFO.Score.text ~ "!", 
-		0.95f, Color.Transparent, Color.White);
-		this.menu = new UIButton(new Rectangle(0, 0, 0, 0), null, "<--", "Back to main menu.");
+		img = new UIImage(new Rectangle(0, 0, 0, 0), null, this.Content.LoadTexture("ui/polyplex8"));
+		img.SetPlacement(true);
+		img.ImageColor.Alpha = 0;
 	}
 
+	private bool fin = true;
 	public override void Update(GameTimes game_time) {
-		menu.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(menu.Area.Width/2);
-		menu.Area.Y = (cast(int)WereshiftGame.Bounds.Y/2)-(menu.Area.Height/2);
-		you_died.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(you_died.Area.Width/2);
-		you_died.Area.Y = 32;
-		text.Area.X = 32;
-		text.Area.Y = 64;
-		
-		you_died.Update(game_time);
-		text.Update(game_time);
-		menu.Update(game_time);
+		if (fin) {
+			img.ImageColor.Alpha = img.ImageColor.Alpha + 2;
+			if (img.ImageColor.Alpha >= 255) {
+				fin = !fin;
+			}
+		} else {
+			img.ImageColor.Alpha = img.ImageColor.Alpha - 2;
+			if (img.ImageColor.Alpha <= 0) {
+				callback(GameState.MainMenu);
+			}
+		}
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
-		sprite_batch.Begin();
-		you_died.Draw(game_time, sprite_batch);
-		text.Draw(game_time, sprite_batch);
-		menu.Draw(game_time, sprite_batch);
+		sprite_batch.Begin(SpriteSorting.Deferred, Blending.NonPremultiplied, Sampling.PointClamp, null, null);
+		img.Area = new Rectangle(cast(int)WereshiftGame.Bounds.X/2, cast(int)WereshiftGame.Bounds.Y/2, img.ImageBounds.X/2, img.ImageBounds.Y/2);
+		img.Draw(game_time, sprite_batch);
 		sprite_batch.End();
+	}
+
+	private float scale_factor(Vector2i screen, Vector2i content_size) {
+		float screen_aspect = screen.X/screen.Y;
+		float content_aspect = content_size.X/content_size.Y;
+
+		float scale_factor;
+		if (screen_aspect > content_aspect) {
+			scale_factor = screen.Y / content_size.Y;
+		} else {
+			scale_factor = screen.X / content_size.X;
+		}
+		return scale_factor;
 	}
 
 }

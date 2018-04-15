@@ -185,6 +185,7 @@ public class Villager : GameObject {
 				}
 			}
 			this.Alive = false;
+			GAME_INFO.Souls++;
 			if (!WereshiftGame.GoreOn) {
 				parent.ThePlayer.KillSucceeded();
 			}

@@ -21,56 +21,54 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.screens.scorescreen;
+module wereshift.screens.startscreen;
 import wereshift.screen;
 import wereshift.ui;
 import wereshift.game;
-import std.conv;
 import std.stdio;
 
-public class ScoreScreen : Screen {
-	UILabel you_died;
-	UILabel text;
-	UIButton menu;
+public class StartScreen : Screen {
 
-	public void SetCallback(UIButton.ButtonCallback callback) {
-		this.menu.SetCallback(callback);
-	}
+	private UIButton play_game;
+	private UIButton exit_game;
 
 	this(ContentManager content) {
 		super(content);
+		Init();
 	}
 
 	public override void Init() {
-		this.you_died = new UILabel(new Rectangle(0, 0, 0, 0), null, "YOU DIED", 1f, Color.Transparent, Color.Red);
-		this.text = new UILabel(new Rectangle(0, 0, 0, 0), null, 
-		"You survived " ~ GAME_INFO.Night.text ~ " nights!\n" ~
-		"You killed " ~ GAME_INFO.Souls.text ~ " villagers!\n" ~
-		"You have taken " ~ GAME_INFO.DamageTaken.text ~ " of total damage from enemies!\n\n" ~
-		"Total Score: " ~ GAME_INFO.Score.text ~ "!", 
-		0.95f, Color.Transparent, Color.White);
-		this.menu = new UIButton(new Rectangle(0, 0, 0, 0), null, "<--", "Back to main menu.");
+		play_game = new UIButton(new Rectangle(0, 0, 256, 32), null, "Start Game", "Starts the game");
+		exit_game = new UIButton(new Rectangle(0, 0, 256, 32), null, "Exit", "Exits the game");
+	}
+
+	public StartScreen SetPlayGameCallback(UIButton.ButtonCallback callback) {
+		play_game.SetCallback(callback);
+		return this;
+	}
+
+	public StartScreen SetExitGameCallback(UIButton.ButtonCallback callback) {
+		exit_game.SetCallback(callback);
+		return this;
 	}
 
 	public override void Update(GameTimes game_time) {
-		menu.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(menu.Area.Width/2);
-		menu.Area.Y = (cast(int)WereshiftGame.Bounds.Y/2)-(menu.Area.Height/2);
-		you_died.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(you_died.Area.Width/2);
-		you_died.Area.Y = 32;
-		text.Area.X = 32;
-		text.Area.Y = 64;
+		play_game.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(play_game.Area.Width/2);
+		play_game.Area.Y = (cast(int)WereshiftGame.Bounds.Y/2)-(play_game.Area.Height/2);
+		exit_game.Area.X = (cast(int)WereshiftGame.Bounds.X/2)-(exit_game.Area.Width/2);
+		exit_game.Area.Y = (cast(int)WereshiftGame.Bounds.Y)-(exit_game.Area.Height)-32;
 		
-		you_died.Update(game_time);
-		text.Update(game_time);
-		menu.Update(game_time);
+		exit_game.Update(game_time);
+		play_game.Update(game_time);
 	}
 
 	public override void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
 		sprite_batch.Begin();
-		you_died.Draw(game_time, sprite_batch);
-		text.Draw(game_time, sprite_batch);
-		menu.Draw(game_time, sprite_batch);
+		play_game.Draw(game_time, sprite_batch);
+		exit_game.Draw(game_time, sprite_batch);
+		Vector2 wss = UIDesign.UI_FONT.MeasureString("WERESHIFT", 2f);
+		Vector2 pos = Vector2((WereshiftGame.Bounds.X/2)-(wss.X/2), 64);
+		UIDesign.UI_FONT.DrawString(sprite_batch, "WERESHIFT", pos, 2f, Color.White, game_time, true, 2f);
 		sprite_batch.End();
 	}
-
 }

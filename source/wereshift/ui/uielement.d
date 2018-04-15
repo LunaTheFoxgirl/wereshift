@@ -21,29 +21,37 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-module wereshift.app;
-import polyplex.utils.logging;
-import polyplex.core;
-import polyplex;
-import polyplex.math;
-import wereshift.game;
-import wereshift.gameinfo;
+module wereshift.ui.uielement;
+import wereshift.ui;
 
-static void main(string[] args) {
-	//LogLevel |= LogType.Debug;
-	LogLevel |= LogType.Info;
-	LogLevel |= LogType.Error;
-	LogLevel |= LogType.Fatal;
-	
-	GAME_INFO = new GameInfo();
-	GAME_INFO.Night = 0;
-	GAME_INFO.Souls = 0;
-	try {
-		BasicGameLauncher.InitSDL();
-		BasicGameLauncher.LaunchGame(new WereshiftGame(), args);
-	} catch (Exception ex) {
-		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
-	} catch (Error ex) {
-		Logger.Fatal("The game crashed!\nReason:\n{0}", ex.message);
+public class UIElement {
+	public Rectangle Area;
+	protected UIElement parent;
+	private string tooltip;
+	private UILabel label;
+
+	this(Rectangle area, UIElement parent = null, string tooltip = null) {
+		this.Area = area;
+		this.parent = parent;
+		this.tooltip = tooltip;
+		if (!(tooltip is null)) this.label = new UILabel(new Rectangle(0, 0, 1, 1), null, tooltip, 0.6f, UIDesign.UI_COL);
 	}
+
+	public void Update(GameTimes game_time) {
+		update(game_time);
+	}
+
+	public void Draw(GameTimes game_time, SpriteBatch sprite_batch) {
+		draw(game_time, sprite_batch);
+		if (!(this.label is null)) {
+			if (this.Area.Intersects(Mouse.Position)) {
+				label.Area = new Rectangle(cast(int)Mouse.Position.X+16, cast(int)Mouse.Position.Y+16, 1, 1);
+				label.Draw(game_time, sprite_batch);
+			}
+		}
+	}
+
+	public abstract void Init();
+	protected abstract void draw(GameTimes game_time, SpriteBatch sprite_batch);
+	protected abstract void update(GameTimes game_time);
 }

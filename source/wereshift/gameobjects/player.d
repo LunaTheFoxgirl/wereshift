@@ -124,6 +124,7 @@ public class Player : GameObject {
 		if (stun_frame != 0) return;
 		health -= amount/defense;
 		stun_frame = stun_frames;
+		GAME_INFO.DamageTaken += cast(int)(amount/defense);
 	}
 
 	public void KillSucceeded() {
@@ -250,7 +251,6 @@ public class Player : GameObject {
 		state_k = Keyboard.GetState();
 		state_m = Mouse.GetState();
 		if (last_state_k is null) last_state_k = state_k;
-		if (last_state_m is null) last_state_m = state_m;
 
 		if (this.health > 0) {
 			handle_update_alive();
