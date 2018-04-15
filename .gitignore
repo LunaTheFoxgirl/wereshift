@@ -15,3 +15,5 @@ wereshift-test-*
 *.lst
 
 libs/
+
+dub.selections.json
