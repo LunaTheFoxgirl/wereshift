@@ -87,7 +87,7 @@ public class Projectile : GameObject {
 
 		if (Spent) return;
 		if (this.Hitbox.Intersects(parent.ThePlayer.Hitbox)) {
-			parent.ThePlayer.Damage(10);
+			parent.ThePlayer.Damage((10*(GAME_INFO.Night+1)));
 			this.Spent = true;
 			this.velocity = Vector2.Zero;
 		}

@@ -82,7 +82,7 @@ public class Player : GameObject {
 	private bool is_hiding = false;
 
 	private int stun_frame = 0;
-	private int stun_frames = 100;
+	private int stun_frames = 50;
 
 	public bool StunFrames() {
 		if (stun_frame != 0) return true;
