@@ -4,6 +4,15 @@ Submission for Linux Game Jam 2018 (Work in progress)
 You are a werewolf, awooo!
 Survive as many nights as you can in this semi-stealth game about being a werewolf, lusting for blood.
 
+# Troubleshooting
+If you get this error:
+```
+Failed to load one or more shared libraries:
+    libs/amd64/libSDL2.so - libsndio.so.6.1: cannot open shared object file: No such file or directory
+```
+try either: installing the libsdl2 dependencies
+OR: remove the libs folder (if you are running arch linux or the like)
+
 # Controls
 L/R Arrow = Move
 Down Arrow = Crouch
