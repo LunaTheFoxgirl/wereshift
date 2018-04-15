@@ -4,6 +4,19 @@ Submission for Linux Game Jam 2018 (Work in progress)
 You are a werewolf, awooo!
 Survive as many nights as you can in this semi-stealth game about being a werewolf, lusting for blood.
 
+# Building
+To build wereshift you will need DLang 2. Fetch it from the DLang website if you haven't already.
+
+Clone the repo, and run `dub`.
+
+dub will automatically fetch depedencies for the project.
+
+If you want to specify a custom build of SDL, create a folder called libs, inside libs make a folder with the id of your architecture (amd64, i386, arm64 and arm are supported ids), inside that put your .so/.dylib/etc.
+
+Please note, if you are using free/openbsd, you will have to name the file libSDL2-free(or open)bsd.so.
+
+On windows it's called SDL2.dll, on linux libSDL2.dll and on macOs libSDL2.dylib
+
 # Troubleshooting
 If you get this error:
 ```
