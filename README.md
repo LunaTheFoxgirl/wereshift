@@ -13,6 +13,8 @@ Failed to load one or more shared libraries:
 try either: installing the libsdl2 dependencies
 OR: remove the libs folder (if you are running arch linux or the like)
 
+If the game still doesn't work, please create an git issue. I (clipsey) will look in to it asap.
+
 # Controls
 L/R Arrow = Move
 Down Arrow = Crouch
