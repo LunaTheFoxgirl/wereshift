@@ -30,7 +30,7 @@ import wereshift.game;
 import wereshift.gameinfo;
 
 static void main(string[] args) {
-	//LogLevel |= LogType.Debug;
+	LogLevel |= LogType.Debug;
 	LogLevel |= LogType.Info;
 	LogLevel |= LogType.Error;
 	LogLevel |= LogType.Fatal;

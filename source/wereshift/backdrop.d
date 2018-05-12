@@ -56,7 +56,7 @@ public class Backdrop {
 	}
 
 	public GameTime DawnTime() {
-		return Time()+GameTime.FromMinutes(5);
+		return start_time+GameTime.FromMinutes(5);
 	}
 
 	public float PercentageThroughNight() {
